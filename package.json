@@ -1,0 +1,17 @@
+{
+  "name": "custommenu-backend",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon -L src/index.js",
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "dotenv": "^16.5.0",
+    "nodemon": "^2.0.22"
+  }
+}
