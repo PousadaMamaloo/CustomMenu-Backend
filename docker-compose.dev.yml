@@ -5,11 +5,17 @@ services:
     build:
       context: ../CustomMenu-Backend
     container_name: dev-backend
+    
+    dns:
+      - 8.8.8.8
+    
     ports:
       - "3000:3000"
+
     volumes:
       - ../CustomMenu-Backend:/app
-      - /app/node_modules
+      - node_modules:/app/node_modules
+
     working_dir: /app
     command: npm run dev
     environment:
@@ -24,3 +30,6 @@ services:
 
 networks:
   devnet:
+
+volumes:
+  node_modules:

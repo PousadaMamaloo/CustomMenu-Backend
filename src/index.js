@@ -1,6 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
-
+import sequelize from './config/database.js'; // 👈 repare no .js no final
 dotenv.config();
 
 const app = express();
