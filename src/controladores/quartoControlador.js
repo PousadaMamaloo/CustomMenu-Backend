@@ -1,5 +1,5 @@
 import Quarto from '../modelos/quarto.js'; // Importa o modelo Quarto
-import {respostaHelper} from '../utiles/helpers/respostaHelper.js'; // Importa o helper de resposta
+import {respostaHelper} from '../utilitarios/helpers/respostaHelper.js'; // Importa o helper de resposta
 import { validationResult } from 'express-validator'; 
 
 // Função para criar um novo quarto

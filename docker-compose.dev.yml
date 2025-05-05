@@ -5,19 +5,20 @@ services:
     build:
       context: ../CustomMenu-Backend
     container_name: dev-backend
-    
+
     dns:
       - 8.8.8.8
-    
+
     ports:
       - "3000:3000"
 
     volumes:
       - ../CustomMenu-Backend:/app
-      - node_modules:/app/node_modules
+      - /app/node_modules   # impede que o node_modules local sobrescreva o do container
 
     working_dir: /app
     command: npm run dev
+
     environment:
       - POSTGRES_HOST=${POSTGRES_HOST}
       - POSTGRES_PORT=${POSTGRES_PORT}
@@ -25,11 +26,9 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+
     networks:
       - devnet
 
 networks:
   devnet:
-
-volumes:
-  node_modules:
