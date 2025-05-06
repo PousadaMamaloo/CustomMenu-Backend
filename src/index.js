@@ -5,12 +5,8 @@ import bodyParser from 'body-parser';
 //import cors from 'cors';
 
 import quartoRotas from './rotas/quartoRotas.js';
-import hospedeRotas from './rotas/hospedeRotas.js'; // Se quiser já importar
-
-import bcrypt from 'bcryptjs';
-
-const hash = await bcrypt.hash('81999998888', 10);
-console.log(hash);
+import hospedeRotas from './rotas/hospedeRotas.js';
+import administradorRotas from './rotas/administradorRotas.js';
 
 dotenv.config();
 
@@ -28,7 +24,8 @@ app.get("/", (req, res) => {
 
 // Rotas da API
 app.use('/api/quartos', quartoRotas);
-app.use('/api/hospedes', hospedeRotas); // Rota para login e CRUD de hóspedes
+app.use('/api/hospedes', hospedeRotas);
+app.use('/api/administrador', administradorRotas);
 
 // Teste de conexão com o banco
 (async () => {
@@ -44,3 +41,4 @@ app.use('/api/hospedes', hospedeRotas); // Rota para login e CRUD de hóspedes
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
 });
+

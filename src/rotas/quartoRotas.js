@@ -8,6 +8,6 @@ const router = express.Router();
 router.use(autenticador)
 
 router.post('/quartos', quartoValidador, criarQuarto);
-router.get('/quartos', listarQuartos);
+router.get('/listar', listarQuartos);
 
 export default router;

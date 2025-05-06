@@ -19,7 +19,7 @@ router.post('/login', loginHospede);
 // 🔐 Rotas protegidas
 router.use(autenticador);
 
-router.post('/', hospedeValidador, criarHospede);
+router.post('/cadastrar', hospedeValidador, criarHospede);
 router.get('/listar', listarHospedes);
 router.get('/:id', buscarHospedePorId);
 router.put('/:id', hospedeValidador, atualizarHospede);
