@@ -1,4 +1,5 @@
 import { body } from 'express-validator';
+import Hospede from '../../modelos/hospede.js';
 import  Quarto  from '../../modelos/quarto.js';
 export const quartoValidador = [
   // Validação para o número do quarto
