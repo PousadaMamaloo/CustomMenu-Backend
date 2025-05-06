@@ -2,7 +2,6 @@ import Quarto from '../modelos/quarto.js';
 import { respostaHelper } from '../utilitarios/helpers/respostaHelper.js';
 import { validationResult } from 'express-validator';
 
-// 🆕 Criar
 export const criarQuarto = async (req, res) => {
   const erros = validationResult(req);
   if (!erros.isEmpty()) {
@@ -37,7 +36,6 @@ export const criarQuarto = async (req, res) => {
   }
 };
 
-// 📋 Listar todos
 export const listarQuartos = async (req, res) => {
   try {
     const quartos = await Quarto.findAll();
@@ -55,7 +53,6 @@ export const listarQuartos = async (req, res) => {
   }
 };
 
-// 🔍 Buscar por ID ou número
 export const buscarQuarto = async (req, res) => {
   try {
     const { id, num } = req.query;
@@ -93,7 +90,6 @@ export const buscarQuarto = async (req, res) => {
   }
 };
 
-// ✏️ Atualizar
 export const atualizarQuarto = async (req, res) => {
   try {
     const { id } = req.params;
@@ -123,7 +119,6 @@ export const atualizarQuarto = async (req, res) => {
   }
 };
 
-// 🗑 Deletar
 export const deletarQuarto = async (req, res) => {
   try {
     const { id } = req.params;

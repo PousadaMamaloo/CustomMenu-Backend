@@ -17,17 +17,14 @@ const PORT = process.env.PORT || 3000;
 //app.use(cors());
 app.use(bodyParser.json());
 
-// Rota de teste
 app.get("/", (req, res) => {
   res.send("Finalmente saiu nosso Hello World! 🚀");
 });
 
-// Rotas da API
 app.use('/api/quartos', quartoRotas);
 app.use('/api/hospedes', hospedeRotas);
 app.use('/api/administrador', administradorRotas);
 
-// Teste de conexão com o banco
 (async () => {
   try {
     await sequelize.authenticate();
@@ -37,7 +34,6 @@ app.use('/api/administrador', administradorRotas);
   }
 })();
 
-// Inicializa o servidor
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
 });
