@@ -20,8 +20,8 @@ router.get('/listar', listarQuartos);
 
 router.get('/buscar/:num', buscarQuarto);
 
-router.put('/:id', atualizarQuarto);
+router.put('/:num', atualizarQuarto);
 
-router.delete('/:id', deletarQuarto);
+router.delete('/:num', deletarQuarto);
 
 export default router;

@@ -89,11 +89,11 @@ export const buscarQuarto = async (req, res) => {
 
 export const atualizarQuarto = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { num } = req.params;
     const dados = req.body;
 
     const [linhasAfetadas] = await Quarto.update(dados, {
-      where: { id_quarto: id }
+      where: { num_quarto: num }
     });
 
     if (linhasAfetadas === 0) {
@@ -118,10 +118,10 @@ export const atualizarQuarto = async (req, res) => {
 
 export const deletarQuarto = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { num } = req.params;
 
     const linhasRemovidas = await Quarto.destroy({
-      where: { id_quarto: id }
+      where: { num_quarto: num }
     });
 
     if (linhasRemovidas === 0) {
