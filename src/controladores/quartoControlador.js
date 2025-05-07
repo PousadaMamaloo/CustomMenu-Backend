@@ -55,19 +55,16 @@ export const listarQuartos = async (req, res) => {
 
 export const buscarQuarto = async (req, res) => {
   try {
-    const { id, num } = req.query;
+    const { num } = req.params;
 
-    let quarto;
-    if (id) {
-      quarto = await Quarto.findByPk(id);
-    } else if (num) {
-      quarto = await Quarto.findOne({ where: { num_quarto: num } });
-    } else {
+    if (!num) {
       return res.status(400).json(respostaHelper({
         status: 400,
-        message: 'Informe o ID ou o número do quarto para a busca.'
+        message: 'Informe o número do quarto para a busca.'
       }));
     }
+
+    const quarto = await Quarto.findOne({ where: { num_quarto: num } });
 
     if (!quarto) {
       return res.status(404).json(respostaHelper({

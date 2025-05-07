@@ -18,7 +18,7 @@ router.post('/criar', quartoValidador, criarQuarto);
 
 router.get('/listar', listarQuartos);
 
-router.get('/buscar', buscarQuarto);
+router.get('/buscar/:num', buscarQuarto);
 
 router.put('/:id', atualizarQuarto);
 
