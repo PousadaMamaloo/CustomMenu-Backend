@@ -13,10 +13,8 @@ import autenticador from '../utilitarios/autenticacao/autenticador.js';
 
 const router = express.Router();
 
-// 🔓 Rota pública
 router.post('/login', loginHospede);
 
-// 🔐 Rotas protegidas
 router.use(autenticador);
 
 router.post('/cadastrar', hospedeValidador, criarHospede);

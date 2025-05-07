@@ -7,7 +7,6 @@ import {respostaHelper} from '../utilitarios/helpers/respostaHelper.js';
 const JWT_SECRET = process.env.JWT_SECRET || 'seu-segredo-jwt';
 const JWT_EXPIRES = '1d';
 
-// 🔐 LOGIN
 export const loginHospede = async (req, res) => {
   const { num_quarto, telef_hospede } = req.body;
 
@@ -61,7 +60,6 @@ export const loginHospede = async (req, res) => {
   }
 };
 
-// 🧾 CRIAR
 export const criarHospede = async (req, res) => {
   try {
     const { nome_hospede, email_hospede, telef_hospede, data_chegada, data_saida } = req.body;
@@ -92,7 +90,6 @@ export const criarHospede = async (req, res) => {
   }
 };
 
-// 📋 LISTAR TODOS
 export const listarHospedes = async (req, res) => {
   try {
     const hospedes = await Hospede.findAll();
@@ -110,7 +107,6 @@ export const listarHospedes = async (req, res) => {
   }
 };
 
-// 🔍 BUSCAR POR ID
 export const buscarHospedePorId = async (req, res) => {
   try {
     const { id } = req.params;
@@ -137,7 +133,6 @@ export const buscarHospedePorId = async (req, res) => {
   }
 };
 
-// ✏️ ATUALIZAR
 export const atualizarHospede = async (req, res) => {
   try {
     const { id } = req.params;
@@ -172,7 +167,6 @@ export const atualizarHospede = async (req, res) => {
   }
 };
 
-// 🗑 DELETAR
 export const deletarHospede = async (req, res) => {
   try {
     const { id } = req.params;

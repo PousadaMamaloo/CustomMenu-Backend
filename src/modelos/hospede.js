@@ -15,7 +15,7 @@ const Hospede = sequelize.define('Hospede', {
   telef_hospede: DataTypes.STRING,
   data_chegada: DataTypes.DATE,
   data_saida: DataTypes.DATE,
-  senha_hash: DataTypes.TEXT // <- foi adicionada via ALTER TABLE manualmente
+  senha_hash: DataTypes.TEXT
 }, {
   tableName: 'tab_hospede',
   schema: 'mamaloo',
