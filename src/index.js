@@ -2,7 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import sequelize from './config/database.js';
 import bodyParser from 'body-parser';
-//import cors from 'cors';
+import cors from 'cors';
 
 import quartoRotas from './rotas/quartoRotas.js';
 import hospedeRotas from './rotas/hospedeRotas.js';
@@ -13,8 +13,7 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middlewares globais
-//app.use(cors());
+app.use(cors());
 app.use(bodyParser.json());
 
 app.get("/", (req, res) => {
