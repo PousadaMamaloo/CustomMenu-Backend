@@ -7,6 +7,7 @@ import cors from 'cors';
 import quartoRotas from './rotas/quartoRotas.js';
 import hospedeRotas from './rotas/hospedeRotas.js';
 import administradorRotas from './rotas/administradorRotas.js';
+import itemRotas from './rotas/itemRotas.js';
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ app.get("/", (req, res) => {
 app.use('/api/quartos', quartoRotas);
 app.use('/api/hospedes', hospedeRotas);
 app.use('/api/administrador', administradorRotas);
+app.use('/api/itens', itemRotas);
 
 (async () => {
   try {
