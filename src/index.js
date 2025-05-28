@@ -8,6 +8,7 @@ import quartoRotas from './rotas/quartoRotas.js';
 import hospedeRotas from './rotas/hospedeRotas.js';
 import administradorRotas from './rotas/administradorRotas.js';
 import itemRotas from './rotas/itemRotas.js';
+import eventoRotas from './rotas/eventoRotas.js';
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use('/api/quartos', quartoRotas);
 app.use('/api/hospedes', hospedeRotas);
 app.use('/api/administrador', administradorRotas);
 app.use('/api/itens', itemRotas);
+app.use('/api/eventos', eventoRotas);
 
 (async () => {
   try {
