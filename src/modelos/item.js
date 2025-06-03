@@ -1,7 +1,6 @@
 import { Sequelize, DataTypes } from 'sequelize';
 import sequelize from '../config/database.js';
-import Evento from './evento.js'; // Importar Evento para definir a associação
-// Remover import de RestricaoAlimentar
+import Evento from './evento.js'; 
 
 const Item = sequelize.define('Item', {
   id_item: {
@@ -25,7 +24,7 @@ const Item = sequelize.define('Item', {
   categ_item: {
     type: DataTypes.STRING,
     allowNull: true,
-    field: 'categ_item', // Explicitamente mapear para o campo do banco, se necessário
+    field: 'categ_item',
     set(value) {
         if (typeof value === 'string') {
             const formatado = value.toLowerCase().replace(/^\w/, c => c.toUpperCase());
@@ -49,15 +48,15 @@ const Item = sequelize.define('Item', {
   timestamps: false,
 });
 
-// Associação Many-to-Many com Evento
+
 Item.belongsToMany(Evento, {
   through: 'tab_re_evento_item',
   foreignKey: 'id_item',
   otherKey: 'id_evento',
-  as: 'Eventos' // Alias para acessar os eventos associados
+  as: 'Eventos' 
 });
 
-// Remover Associação Many-to-Many com RestricaoAlimentar
+
 
 export default Item;
 
