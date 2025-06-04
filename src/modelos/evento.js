@@ -1,5 +1,6 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/database.js';
+import Item from './item.js'; 
 
 const Evento = sequelize.define('Evento', {
   id_evento: {
@@ -26,4 +27,13 @@ const Evento = sequelize.define('Evento', {
   timestamps: false
 });
 
+
+Evento.belongsToMany(Item, {
+  through: 'tab_re_evento_item',
+  foreignKey: 'id_evento',
+  otherKey: 'id_item',
+  as: 'Itens' 
+});
+
 export default Evento;
+

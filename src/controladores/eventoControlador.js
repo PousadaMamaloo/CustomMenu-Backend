@@ -1,157 +1,240 @@
 import Evento from '../modelos/evento.js';
+import Item from '../modelos/item.js'; 
 import sequelize from '../config/database.js';
 import { validationResult } from 'express-validator';
 import Horario from '../modelos/horario.js';
+import { respostaHelper } from '../utilitarios/helpers/respostaHelper.js'; 
+
 
 export const listarEventos = async (req, res) => {
     try {
-        const eventos = await Evento.findAll();
+        
         const [result] = await sequelize.query(`
       SELECT e.id_evento, e.nome_evento, e.desc_evento, e.sts_evento,
         array_agg(h.horario::text) AS horarios
       FROM mamaloo.tab_evento e
-      JOIN mamaloo.tab_re_evento_horario reh ON reh.id_evento = e.id_evento
-      JOIN mamaloo.tab_horario h ON h.id_horario = reh.id_horario
+      LEFT JOIN mamaloo.tab_re_evento_horario reh ON reh.id_evento = e.id_evento
+      LEFT JOIN mamaloo.tab_horario h ON h.id_horario = reh.id_horario
       GROUP BY e.id_evento, e.nome_evento, e.desc_evento, e.sts_evento
+      ORDER BY e.id_evento
     `);
 
-        return res.json({
-            status: 'success',
+        return res.status(200).json(respostaHelper({
+            status: 200,
             mensagem: 'Eventos encontrados.',
-            dados: result
-        });
+            data: result
+        }));
     } catch (err) {
-        return res.status(500).json({
-            status: 'error',
+        console.error("Erro ao buscar eventos:", err);
+        return res.status(500).json(respostaHelper({
+            status: 500,
             mensagem: 'Erro ao buscar eventos.',
-            dados: {},
             errors: [err.message]
-        });
+        }));
     }
 };
+
+
+export const listarItensPorEvento = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const evento = await Evento.findByPk(id, {
+            include: [{
+                model: Item,
+                as: 'Itens', 
+                attributes: ['id_item', 'nome_item', 'valor_item', 'qntd_max_hospede', 'categ_item'], 
+                through: { attributes: [] } 
+                
+            }]
+        });
+
+        if (!evento) {
+            return res.status(404).json(respostaHelper({
+                status: 404,
+                mensagem: 'Evento não encontrado.'
+            }));
+        }
+
+        
+        const itensFormatados = evento.Itens ? evento.Itens.map(item => ({
+            id_item: item.id_item,
+            nome_item: item.nome_item,
+            valor_item: item.valor_item,
+            qntd_max_hospede: item.qntd_max_hospede,
+            categoria: item.categ_item 
+            
+        })) : [];
+
+        return res.status(200).json(respostaHelper({
+            status: 200,
+            mensagem: 'Itens do evento listados com sucesso.',
+            data: itensFormatados 
+        }));
+
+    } catch (err) {
+        console.error(`Erro ao buscar itens para o evento ${id}:`, err);
+        return res.status(500).json(respostaHelper({
+            status: 500,
+            mensagem: 'Erro interno ao buscar itens do evento.',
+            errors: [err.message]
+        }));
+    }
+};
+
+
 
 export const criarEvento = async (req, res) => {
     const erros = validationResult(req);
     if (!erros.isEmpty()) {
-        return res.status(400).json({
-            status: 'error',
+        return res.status(400).json(respostaHelper({
+            status: 400,
             mensagem: 'Falha de validação.',
-            dados: {},
             errors: erros.array()
-        });
+        }));
     }
     const { nome_evento, desc_evento, horarios, sts_evento } = req.body;
 
+    const t = await sequelize.transaction(); 
+
     try {
-        const evento = await Evento.create({ nome_evento, desc_evento, sts_evento });
-        for (const horario of horarios) {
-            let [hor, created] = await Horario.findOrCreate({
-                where: { horario }
-            });
-            await sequelize.query(`
-        INSERT INTO mamaloo.tab_re_evento_horario (id_evento, id_horario)
-        VALUES (${evento.id_evento}, ${hor.id_horario})
-      `);
+        const evento = await Evento.create({ nome_evento, desc_evento, sts_evento }, { transaction: t });
+
+        if (horarios && horarios.length > 0) {
+            for (const horario of horarios) {
+                let [hor, created] = await Horario.findOrCreate({
+                    where: { horario },
+                    transaction: t
+                });
+                
+                await sequelize.query(`
+                    INSERT INTO mamaloo.tab_re_evento_horario (id_evento, id_horario)
+                    VALUES (:id_evento, :id_horario)
+                `, {
+                    replacements: { id_evento: evento.id_evento, id_horario: hor.id_horario },
+                    transaction: t
+                });
+            }
         }
 
-        return res.status(201).json({
-            status: 'success',
+        await t.commit(); 
+
+        return res.status(201).json(respostaHelper({
+            status: 201,
             mensagem: 'Evento criado com sucesso.',
-            dados: { id_evento: evento.id_evento }
-        });
+            data: { id_evento: evento.id_evento }
+        }));
     } catch (err) {
-        return res.status(500).json({
-            status: 'error',
+        await t.rollback(); 
+        console.error("Erro ao criar evento:", err);
+        return res.status(500).json(respostaHelper({
+            status: 500,
             mensagem: 'Erro ao criar evento.',
-            dados: {},
             errors: [err.message]
-        });
+        }));
     }
 };
+
 
 export const atualizarEvento = async (req, res) => {
     const erros = validationResult(req);
     if (!erros.isEmpty()) {
-        return res.status(400).json({
-            status: 'error',
+        return res.status(400).json(respostaHelper({
+            status: 400,
             mensagem: 'Falha de validação.',
-            dados: {},
             errors: erros.array()
-        });
+        }));
     }
     const { id } = req.params;
     const { nome_evento, desc_evento, horarios, sts_evento } = req.body;
 
+    const t = await sequelize.transaction(); 
+
     try {
-        const evento = await Evento.findByPk(id);
+        const evento = await Evento.findByPk(id, { transaction: t });
         if (!evento) {
-            return res.status(404).json({
-                status: 'error',
-                mensagem: 'Evento não encontrado.',
-                dados: {}
-            });
+            await t.rollback();
+            return res.status(404).json(respostaHelper({
+                status: 404,
+                mensagem: 'Evento não encontrado.'
+            }));
         }
 
-        await evento.update({ nome_evento, desc_evento, sts_evento });
+        await evento.update({ nome_evento, desc_evento, sts_evento }, { transaction: t });
 
+        
         await sequelize.query(`
-      DELETE FROM mamaloo.tab_re_evento_horario WHERE id_evento = ${id}
-    `);
+            DELETE FROM mamaloo.tab_re_evento_horario WHERE id_evento = :id_evento
+        `, { replacements: { id_evento: id }, transaction: t });
 
-        for (const horario of horarios) {
-            let [hor, created] = await sequelize.models.Horario.findOrCreate({
-                where: { horario }
-            });
-            await sequelize.query(`
-        INSERT INTO mamaloo.tab_re_evento_horario (id_evento, id_horario)
-        VALUES (${id}, ${hor.id_horario})
-      `);
+        
+        if (horarios && horarios.length > 0) {
+            for (const horario of horarios) {
+                let [hor, created] = await Horario.findOrCreate({
+                    where: { horario },
+                    transaction: t
+                });
+                await sequelize.query(`
+                    INSERT INTO mamaloo.tab_re_evento_horario (id_evento, id_horario)
+                    VALUES (:id_evento, :id_horario)
+                `, { replacements: { id_evento: id, id_horario: hor.id_horario }, transaction: t });
+            }
         }
 
-        return res.json({
-            status: 'success',
-            mensagem: 'Evento atualizado com sucesso.',
-            dados: {}
-        });
+        await t.commit(); 
+
+        return res.status(200).json(respostaHelper({
+            status: 200,
+            mensagem: 'Evento atualizado com sucesso.'
+        }));
     } catch (err) {
-        return res.status(500).json({
-            status: 'error',
+        await t.rollback(); 
+        console.error(`Erro ao atualizar evento ${id}:`, err);
+        return res.status(500).json(respostaHelper({
+            status: 500,
             mensagem: 'Erro ao atualizar evento.',
-            dados: {},
             errors: [err.message]
-        });
+        }));
     }
 };
 
+
 export const excluirEvento = async (req, res) => {
     const { id } = req.params;
+    const t = await sequelize.transaction(); 
+
     try {
-        const evento = await Evento.findByPk(id);
+        const evento = await Evento.findByPk(id, { transaction: t });
         if (!evento) {
-            return res.status(404).json({
-                status: 'error',
-                mensagem: 'Evento não encontrado.',
-                dados: {}
-            });
+            await t.rollback();
+            return res.status(404).json(respostaHelper({
+                status: 404,
+                mensagem: 'Evento não encontrado.'
+            }));
         }
 
+        
         await sequelize.query(`
-      DELETE FROM mamaloo.tab_re_evento_horario WHERE id_evento = ${id}
-    `);
+            DELETE FROM mamaloo.tab_re_evento_horario WHERE id_evento = :id_evento
+        `, { replacements: { id_evento: id }, transaction: t });
+        
+        
 
-        await evento.destroy();
+        await evento.destroy({ transaction: t });
 
-        return res.json({
-            status: 'success',
-            mensagem: 'Evento excluído com sucesso.',
-            dados: {}
-        });
+        await t.commit(); 
+
+        return res.status(200).json(respostaHelper({
+            status: 200,
+            mensagem: 'Evento excluído com sucesso.'
+        }));
     } catch (err) {
-        return res.status(500).json({
-            status: 'error',
+        await t.rollback(); 
+        console.error(`Erro ao excluir evento ${id}:`, err);
+        return res.status(500).json(respostaHelper({
+            status: 500,
             mensagem: 'Erro ao excluir evento.',
-            dados: {},
             errors: [err.message]
-        });
+        }));
     }
 };
