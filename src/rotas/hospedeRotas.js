@@ -8,19 +8,22 @@ import {
   loginHospede
 } from '../controladores/hospedeControlador.js';
 
-import { hospedeValidador } from '../utilitarios/validadores/hospedeValidador.js'; // se já tiver criado
+import { hospedeValidador } from '../utilitarios/validadores/hospedeValidador.js';
 import autenticador from '../utilitarios/autenticacao/autenticador.js';
+import autorizaAdministrador from '../utilitarios/autenticacao/autorizaAdministrador.js';
 
 const router = express.Router();
 
 router.post('/login', loginHospede);
 
+
 router.use(autenticador);
 
-router.post('/cadastrar', hospedeValidador, criarHospede);
-router.get('/listar', listarHospedes);
-router.get('/:id', buscarHospedePorId);
-router.put('/:id', hospedeValidador, atualizarHospede);
-router.delete('/:id', deletarHospede);
+router.post('/cadastrar', autorizaAdministrador, hospedeValidador, criarHospede);
+router.get('/listar', autorizaAdministrador, listarHospedes);
+router.get('/:id', autorizaAdministrador, buscarHospedePorId);
+router.put('/:id', autorizaAdministrador, hospedeValidador, atualizarHospede);
+router.delete('/:id', autorizaAdministrador, deletarHospede);
 
 export default router;
+
