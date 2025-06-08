@@ -27,11 +27,4 @@ const Evento = sequelize.define('Evento', {
   timestamps: false
 });
 
-Evento.belongsToMany(Item, {
-  through: 'tab_re_evento_item',
-  foreignKey: 'id_evento',
-  otherKey: 'id_item',
-  as: 'Itens' 
-});
-
 export default Evento;

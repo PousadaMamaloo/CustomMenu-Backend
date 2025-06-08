@@ -28,5 +28,12 @@ Item.belongsToMany(Pedido, {
   otherKey: 'id_pedido',
 });
 
+Evento.belongsToMany(Item, {
+  through: 'tab_re_evento_item',
+  foreignKey: 'id_evento',
+  otherKey: 'id_item',
+  as: 'Itens' 
+});
+
 Pedido.belongsTo(Evento, { foreignKey: 'id_evento' });
 Evento.hasMany(Pedido, { foreignKey: 'id_evento' });
