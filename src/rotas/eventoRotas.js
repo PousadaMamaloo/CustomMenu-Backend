@@ -4,7 +4,9 @@ import {
   criarEvento,
   atualizarEvento,
   excluirEvento,
-  listarItensPorEvento 
+  listarItensPorEvento,
+  vincularItensEvento,
+  desvincularItemEvento
 } from '../controladores/eventoControlador.js';
 import { eventoValidador } from '../utilitarios/validadores/eventoValidador.js';
 import autorizaAdministrador from '../utilitarios/autenticacao/autorizaAdministrador.js';
@@ -18,6 +20,10 @@ router.get('/', listarEventos);
 
 router.get('/:id/itens', autorizaAdministrador, listarItensPorEvento);
 
+router.post('/:id/itens', autorizaAdministrador, vincularItensEvento);
+
+router.delete('/:id/itens/:id_item', autorizaAdministrador, desvincularItemEvento);
+
 router.post('/', autorizaAdministrador, eventoValidador, criarEvento);
 
 router.put('/:id', autorizaAdministrador, eventoValidador, atualizarEvento);
@@ -25,4 +31,3 @@ router.put('/:id', autorizaAdministrador, eventoValidador, atualizarEvento);
 router.delete('/:id', autorizaAdministrador, excluirEvento);
 
 export default router;
-

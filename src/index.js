@@ -10,6 +10,7 @@ import administradorRotas from './rotas/administradorRotas.js';
 import itemRotas from './rotas/itemRotas.js';
 import eventoRotas from './rotas/eventoRotas.js';
 import eventoItemRotas from './rotas/eventoItemRotas.js';
+import relatorioRotas from './rotas/relatorioRotas.js';
 import './modelos/associacoes.js';
 import pedidoRotas from './rotas/pedidoRotas.js';
 
@@ -32,6 +33,7 @@ app.use('/api/itens', itemRotas);
 app.use('/api/eventos', eventoRotas);
 app.use('/api/eventoItem', eventoItemRotas);
 app.use('/api/pedidos', pedidoRotas);
+app.use('/admin/relatorios', relatorioRotas);
 
 (async () => {
   try {
