@@ -11,6 +11,7 @@ import itemRotas from './rotas/itemRotas.js';
 import eventoRotas from './rotas/eventoRotas.js';
 import eventoItemRotas from './rotas/eventoItemRotas.js';
 import './modelos/associacoes.js';
+import pedidoRotas from './rotas/pedidoRotas.js';
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ app.use('/api/administrador', administradorRotas);
 app.use('/api/itens', itemRotas);
 app.use('/api/eventos', eventoRotas);
 app.use('/api/eventoItem', eventoItemRotas);
+app.use('/api/pedidos', pedidoRotas);
 
 (async () => {
   try {
