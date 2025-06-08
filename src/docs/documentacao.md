@@ -559,5 +559,3 @@ Esta documentação detalha os endpoints da API CustomMenu-Backend, incluindo m�
     ```
   - `401 Unauthorized`: Token de autenticação ausente ou inválido.
   - `500 Internal Server Error`: Erro interno do servidor.
-
-
