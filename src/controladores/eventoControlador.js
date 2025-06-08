@@ -82,7 +82,142 @@ export const listarItensPorEvento = async (req, res) => {
     }
 };
 
+export const vincularItensEvento = async (req, res) => {
+    const { id } = req.params;
+    const { itens } = req.body;
+    
+    if (!Array.isArray(itens) || itens.length === 0) {
+        return res.status(400).json(respostaHelper({
+            status: 400,
+            mensagem: 'É necessário fornecer um array de IDs de itens.',
+            errors: ['O campo "itens" deve ser um array não vazio.']
+        }));
+    }
 
+    const t = await sequelize.transaction();
+
+    try {
+        // Verificar se o evento existe
+        const evento = await Evento.findByPk(id, { transaction: t });
+        if (!evento) {
+            await t.rollback();
+            return res.status(404).json(respostaHelper({
+                status: 404,
+                mensagem: 'Evento não encontrado.'
+            }));
+        }
+
+        // Verificar se todos os itens existem
+        const itensExistentes = await Item.findAll({
+            where: {
+                id_item: itens
+            },
+            transaction: t
+        });
+
+        if (itensExistentes.length !== itens.length) {
+            await t.rollback();
+            return res.status(404).json(respostaHelper({
+                status: 404,
+                mensagem: 'Um ou mais itens não foram encontrados.'
+            }));
+        }
+
+        // Obter itens já associados para evitar duplicidade
+        const itensAssociados = await evento.getItens({
+            where: {
+                id_item: itens
+            },
+            transaction: t
+        });
+
+        const itensJaAssociados = itensAssociados.map(item => item.id_item);
+        const itensParaAdicionar = itens.filter(id => !itensJaAssociados.includes(id));
+
+        if (itensParaAdicionar.length > 0) {
+            // Usar o método addItem do Sequelize para associar os itens
+            await evento.addItens(itensParaAdicionar, { 
+                through: { disp_item: true },
+                transaction: t 
+            });
+        }
+
+        await t.commit();
+
+        return res.status(200).json(respostaHelper({
+            status: 200,
+            mensagem: 'Itens vinculados ao evento com sucesso.',
+            data: {
+                itens_adicionados: itensParaAdicionar,
+                itens_ja_existentes: itensJaAssociados
+            }
+        }));
+    } catch (err) {
+        await t.rollback();
+        console.error(`Erro ao vincular itens ao evento ${id}:`, err);
+        return res.status(500).json(respostaHelper({
+            status: 500,
+            mensagem: 'Erro ao vincular itens ao evento.',
+            errors: [err.message]
+        }));
+    }
+};
+
+export const desvincularItemEvento = async (req, res) => {
+    const { id, id_item } = req.params;
+    
+    const t = await sequelize.transaction();
+
+    try {
+        // Verificar se o evento existe
+        const evento = await Evento.findByPk(id, { transaction: t });
+        if (!evento) {
+            await t.rollback();
+            return res.status(404).json(respostaHelper({
+                status: 404,
+                mensagem: 'Evento não encontrado.'
+            }));
+        }
+
+        // Verificar se o item existe
+        const item = await Item.findByPk(id_item, { transaction: t });
+        if (!item) {
+            await t.rollback();
+            return res.status(404).json(respostaHelper({
+                status: 404,
+                mensagem: 'Item não encontrado.'
+            }));
+        }
+
+        // Verificar se a associação existe
+        const associacao = await evento.hasItem(item, { transaction: t });
+        if (!associacao) {
+            await t.rollback();
+            return res.status(404).json(respostaHelper({
+                status: 404,
+                mensagem: 'Item não está associado a este evento.'
+            }));
+        }
+
+        // Usar o método removeItem do Sequelize para remover a associação
+        await evento.removeItem(item, { transaction: t });
+
+        await t.commit();
+
+        return res.status(200).json(respostaHelper({
+            status: 200,
+            mensagem: 'Item desvinculado do evento com sucesso.'
+        }));
+    } catch (err) {
+        await t.rollback();
+        console.error(`Erro ao desvincular item ${id_item} do evento ${id}:`, err);
+        return res.status(500).json(respostaHelper({
+            status: 500,
+            mensagem: 'Erro ao desvincular item do evento.',
+            errors: [err.message]
+        }));
+    }
+};
 
 export const criarEvento = async (req, res) => {
     const erros = validationResult(req);
