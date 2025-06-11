@@ -3,7 +3,7 @@
 ### 1. Associar Item a Evento
 - **Caminho:** `/api/eventoItem/`
 - **Método HTTP:** `POST`
-- **Autenticação:** Necessária (via `autenticador`)
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
 - **Validação:** `eventoItemValidador`, `validarRequisicao`
 - **Descrição:** Associa um item a um evento.
 - **Corpo da Requisição (JSON):**
@@ -28,7 +28,7 @@
 ### 2. Listar Associações de Itens de Evento
 - **Caminho:** `/api/eventoItem/`
 - **Método HTTP:** `GET`
-- **Autenticação:** Necessária (via `autenticador`)
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
 - **Descrição:** Lista todas as associações entre itens e eventos.
 - **Respostas:**
   - `200 OK`: Lista de associações retornada com sucesso.

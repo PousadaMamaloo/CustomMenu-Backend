@@ -3,17 +3,18 @@
 ### 1. Criar Item
 - **Caminho:** `/api/itens/criar`
 - **Método HTTP:** `POST`
-- **Autenticação:** Necessária (via `autenticador`)
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
 - **Validação:** `itemValidador`
 - **Descrição:** Cria um novo item no sistema.
 - **Corpo da Requisição (JSON):**
   ```json
   {
-    "nome": "string",
-    "descricao": "string",
-    "preco": "number",
-    "categoria": "string",
-    "disponivel": "boolean"
+    "nome_item": "string",
+    "desc_item": "string",
+    "foto_item": "string",
+    "categ_item": "string",
+    "qntd_max_hospede": "number",
+    "valor_item": "number"
   }
   ```
 - **Respostas:**
@@ -47,7 +48,7 @@
 ### 3. Atualizar Item
 - **Caminho:** `/api/itens/atualizar/:id`
 - **Método HTTP:** `PUT`
-- **Autenticação:** Necessária (via `autenticador`)
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
 - **Validação:** `itemValidador`
 - **Descrição:** Atualiza as informações de um item existente pelo seu ID.
 - **Parâmetros de Caminho:**
@@ -55,11 +56,12 @@
 - **Corpo da Requisição (JSON):**
   ```json
   {
-    "nome": "string" (opcional),
-    "descricao": "string" (opcional),
-    "preco": "number" (opcional),
-    "categoria": "string" (opcional),
-    "disponivel": "boolean" (opcional)
+    "nome_item": "string" (opcional),
+    "desc_item": "string" (opcional),
+    "foto_item": "string" (opcional),
+    "categ_item": "string" (opcional),
+    "qntd_max_hospede": "number" (opcional),
+    "valor_item": "number" (opcional)
   }
   ```
 - **Respostas:**
@@ -77,7 +79,7 @@
 ### 4. Excluir Item
 - **Caminho:** `/api/itens/excluir/:id`
 - **Método HTTP:** `DELETE`
-- **Autenticação:** Necessária (via `autenticador`)
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
 - **Descrição:** Exclui um item existente pelo seu ID.
 - **Parâmetros de Caminho:**
   - `id`: ID do item (number).

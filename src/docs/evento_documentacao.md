@@ -45,11 +45,10 @@
 - **Corpo da Requisição (JSON):**
   ```json
   {
-    "nome": "string",
-    "data": "YYYY-MM-DD",
-    "horaInicio": "HH:MM",
-    "horaFim": "HH:MM",
-    "descricao": "string" (opcional)
+    "nome_evento": "string",
+    "desc_evento": "string",
+    "horarios": ["HH:MM"],
+    "sts_evento": "boolean"
   }
   ```
 - **Respostas:**
@@ -76,11 +75,10 @@
 - **Corpo da Requisição (JSON):**
   ```json
   {
-    "nome": "string" (opcional),
-    "data": "YYYY-MM-DD" (opcional),
-    "horaInicio": "HH:MM" (opcional),
-    "horaFim": "HH:MM" (opcional),
-    "descricao": "string" (opcional)
+    "nome_evento": "string" (opcional),
+    "desc_evento": "string" (opcional),
+    "horarios": ["HH:MM"] (opcional),
+    "sts_evento": "boolean" (opcional)
   }
   ```
 - **Respostas:**
@@ -114,3 +112,50 @@
   - `403 Forbidden`: Usuário não autorizado.
   - `404 Not Found`: Evento não encontrado.
   - `500 Internal Server Error`: Erro interno do servidor.
+
+### 6. Vincular Itens a Evento
+- **Caminho:** `/api/eventos/:id/itens`
+- **Método HTTP:** `POST`
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
+- **Descrição:** Vincula um ou mais itens a um evento específico.
+- **Parâmetros de Caminho:**
+  - `id`: ID do evento (number).
+- **Corpo da Requisição (JSON):**
+  ```json
+  {
+    "itensIds": ["number"]
+  }
+  ```
+- **Respostas:**
+  - `200 OK`: Itens vinculados com sucesso.
+    ```json
+    {
+      "mensagem": "Itens vinculados ao evento com sucesso!"
+    }
+    ```
+  - `400 Bad Request`: Dados inválidos fornecidos.
+  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `403 Forbidden`: Usuário não autorizado.
+  - `404 Not Found`: Evento ou itens não encontrados.
+  - `500 Internal Server Error`: Erro interno do servidor.
+
+### 7. Desvincular Item de Evento
+- **Caminho:** `/api/eventos/:id/itens/:id_item`
+- **Método HTTP:** `DELETE`
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
+- **Descrição:** Desvincula um item de um evento específico.
+- **Parâmetros de Caminho:**
+  - `id`: ID do evento (number).
+  - `id_item`: ID do item a ser desvinculado (number).
+- **Respostas:**
+  - `200 OK`: Item desvinculado com sucesso.
+    ```json
+    {
+      "mensagem": "Item desvinculado do evento com sucesso!"
+    }
+    ```
+  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `403 Forbidden`: Usuário não autorizado.
+  - `404 Not Found`: Evento ou item não encontrado.
+  - `500 Internal Server Error`: Erro interno do servidor.
+
