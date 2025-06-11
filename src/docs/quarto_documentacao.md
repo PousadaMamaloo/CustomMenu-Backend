@@ -3,8 +3,7 @@
 ### 1. Criar Quarto
 - **Caminho:** `/api/quartos/criar`
 - **Método HTTP:** `POST`
-- **Autenticação:** Necessária (via `autenticador`)
-- **Validação:** `quartoValidador`
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
 - **Descrição:** Cria um novo quarto no sistema.
 - **Corpo da Requisição (JSON):**
   ```json
@@ -68,7 +67,7 @@
 ### 4. Atualizar Quarto
 - **Caminho:** `/api/quartos/:num`
 - **Método HTTP:** `PUT`
-- **Autenticação:** Necessária (via `autenticador`)
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
 - **Descrição:** Atualiza as informações de um quarto existente pelo seu número.
 - **Parâmetros de Caminho:**
   - `num`: Número do quarto (string).
@@ -94,7 +93,7 @@
 ### 5. Deletar Quarto
 - **Caminho:** `/api/quartos/:num`
 - **Método HTTP:** `DELETE`
-- **Autenticação:** Necessária (via `autenticador`)
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
 - **Descrição:** Deleta um quarto existente pelo seu número.
 - **Parâmetros de Caminho:**
   - `num`: Número do quarto (string).

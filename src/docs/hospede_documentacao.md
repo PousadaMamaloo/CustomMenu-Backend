@@ -8,8 +8,8 @@
 - **Corpo da Requisição (JSON):**
   ```json
   {
-    "email": "string",
-    "senha": "string"
+    "num_quarto": "string",
+    "telef_hospede": "string"
   }
   ```
 - **Respostas:**
@@ -25,17 +25,17 @@
 ### 2. Cadastrar Hóspede
 - **Caminho:** `/api/hospedes/cadastrar`
 - **Método HTTP:** `POST`
-- **Autenticação:** Necessária (via `autenticador`)
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
 - **Validação:** `hospedeValidador`
 - **Descrição:** Cadastra um novo hóspede no sistema.
 - **Corpo da Requisição (JSON):**
   ```json
   {
-    "nome": "string",
-    "email": "string",
-    "senha": "string",
-    "telefone": "string",
-    "quartoId": "number"
+    "nome_hospede": "string",
+    "email_hospede": "string",
+    "telef_hospede": "string",
+    "data_chegada": "YYYY-MM-DD",
+    "data_saida": "YYYY-MM-DD"
   }
   ```
 - **Respostas:**
@@ -53,7 +53,7 @@
 ### 3. Listar Hóspedes
 - **Caminho:** `/api/hospedes/listar`
 - **Método HTTP:** `GET`
-- **Autenticação:** Necessária (via `autenticador`)
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
 - **Descrição:** Lista todos os hóspedes existentes.
 - **Respostas:**
   - `200 OK`: Lista de hóspedes retornada com sucesso.
@@ -69,7 +69,7 @@
 ### 4. Buscar Hóspede por ID
 - **Caminho:** `/api/hospedes/:id`
 - **Método HTTP:** `GET`
-- **Autenticação:** Necessária (via `autenticador`)
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
 - **Descrição:** Busca um hóspede específico pelo seu ID.
 - **Parâmetros de Caminho:**
   - `id`: ID do hóspede (number).
@@ -90,7 +90,7 @@
 ### 5. Atualizar Hóspede
 - **Caminho:** `/api/hospedes/:id`
 - **Método HTTP:** `PUT`
-- **Autenticação:** Necessária (via `autenticador`)
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
 - **Validação:** `hospedeValidador`
 - **Descrição:** Atualiza as informações de um hóspede existente pelo seu ID.
 - **Parâmetros de Caminho:**
@@ -98,11 +98,11 @@
 - **Corpo da Requisição (JSON):**
   ```json
   {
-    "nome": "string" (opcional),
-    "email": "string" (opcional),
-    "senha": "string" (opcional),
-    "telefone": "string" (opcional),
-    "quartoId": "number" (opcional)
+    "nome_hospede": "string" (opcional),
+    "email_hospede": "string" (opcional),
+    "telef_hospede": "string" (opcional),
+    "data_chegada": "YYYY-MM-DD" (opcional),
+    "data_saida": "YYYY-MM-DD" (opcional)
   }
   ```
 - **Respostas:**
@@ -120,7 +120,7 @@
 ### 6. Deletar Hóspede
 - **Caminho:** `/api/hospedes/:id`
 - **Método HTTP:** `DELETE`
-- **Autenticação:** Necessária (via `autenticador`)
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
 - **Descrição:** Deleta um hóspede existente pelo seu ID.
 - **Parâmetros de Caminho:**
   - `id`: ID do hóspede (number).

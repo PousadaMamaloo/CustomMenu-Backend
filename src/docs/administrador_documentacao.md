@@ -8,7 +8,7 @@
 - **Corpo da Requisição (JSON):**
   ```json
   {
-    "email": "string",
+    "usuario": "string",
     "senha": "string"
   }
   ```
