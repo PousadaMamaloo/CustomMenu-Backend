@@ -1,4 +1,3 @@
-// src/controladores/administradorControlador.js
 import Administrador from '../modelos/administrador.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -35,11 +34,18 @@ export const loginAdministrador = async (req, res) => {
       role: 'administrador'
     }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
 
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000
+    });
+
     return res.status(200).json(respostaHelper({
       status: 200,
-      message: 'Login realizado com sucesso.',
-      data: { token }
+      message: 'Login realizado com sucesso.'
     }));
+
   } catch (error) {
     return res.status(500).json(respostaHelper({
       status: 500,

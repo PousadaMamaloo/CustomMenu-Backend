@@ -1,8 +1,12 @@
 import jwt from 'jsonwebtoken';
-import {respostaHelper} from '../helpers/respostaHelper.js';
+import { respostaHelper } from '../helpers/respostaHelper.js';
 
 const autenticador = (req, res, next) => {
-    const token = req.headers['authorization'];
+    const token =
+        (req.cookies && req.cookies.token) ||
+        (req.headers['authorization']?.startsWith('Bearer ')
+            ? req.headers['authorization'].slice(7)
+            : req.headers['authorization']);
 
     if (!token) {
         return res.status(401).json(
@@ -15,8 +19,7 @@ const autenticador = (req, res, next) => {
     }
 
     try {
-        const cleanToken = token.startsWith('Bearer ') ? token.slice(7) : token;
-        const decoded = jwt.verify(cleanToken, process.env.JWT_SECRET || 'seu-segredo-jwt');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'seu-segredo-jwt');
         req.user = decoded;
         next();
     } catch (error) {

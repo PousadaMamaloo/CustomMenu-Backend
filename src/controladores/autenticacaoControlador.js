@@ -21,9 +21,7 @@ export const loginHospede = async (req, res) => {
     }
 
     const hospede = await Hospede.findOne({
-      where: {
-        id_hospede: quarto.id_hospede_responsavel
-      }
+      where: { id_hospede: quarto.id_hospede_responsavel }
     });
 
     if (!hospede) {
@@ -51,10 +49,16 @@ export const loginHospede = async (req, res) => {
 
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000
+    });
+
     return res.status(200).json(respostaHelper({
       status: 200,
-      message: 'Login realizado com sucesso.',
-      data: { token }
+      message: 'Login realizado com sucesso.'
     }));
 
   } catch (err) {

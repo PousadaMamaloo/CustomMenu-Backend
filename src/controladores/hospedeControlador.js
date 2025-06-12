@@ -37,6 +37,17 @@ export const loginHospede = async (req, res) => {
         message: 'Telefone incorreto.'
       }));
     }
+    
+    const hoje = new Date();
+    const dataChegada = new Date(hospede.data_chegada);
+    const dataSaida = new Date(hospede.data_saida);
+
+    if (hoje < dataChegada || hoje > dataSaida) {
+      return res.status(403).json(respostaHelper({
+        status: 403,
+        message: 'Sua estadia não está ativa. Acesso negado!'
+      }));
+    }
 
     const token = jwt.sign({
       id_hospede: hospede.id_hospede,
@@ -45,10 +56,16 @@ export const loginHospede = async (req, res) => {
       role: 'hospede'
     }, JWT_SECRET, { expiresIn: JWT_EXPIRES });
 
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: false, // Mude para true em produção com HTTPS
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000
+    });
+
     return res.status(200).json(respostaHelper({
       status: 200,
-      message: 'Login realizado com sucesso.',
-      data: { token }
+      message: 'Login realizado com sucesso.'
     }));
 
   } catch (error) {
