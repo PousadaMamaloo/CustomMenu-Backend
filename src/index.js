@@ -29,7 +29,7 @@ app.use(cookieParser());
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.send("Aqui deveria haver uma mudança!");
+  res.send("Testando o get princiapl com mudança!");
 });
 
 app.use('/api/quartos', quartoRotas);
