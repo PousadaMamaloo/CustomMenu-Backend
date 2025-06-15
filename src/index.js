@@ -29,7 +29,7 @@ app.use(cookieParser());
 app.use(express.json());
 
 app.get("/", (req, res) => {
-  res.send("Finalmente saiu nosso Hello World! 🚀");
+  res.send("Aqui deveria haver uma mudança!");
 });
 
 app.use('/api/quartos', quartoRotas);
