@@ -18,7 +18,7 @@ const Item = sequelize.define('Item', {
     allowNull: true,
   },
   foto_item: {
-    type: DataTypes.STRING(255),
+    type: DataTypes.TEXT,
     allowNull: true,
   },
   categ_item: {
