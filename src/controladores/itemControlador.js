@@ -2,6 +2,22 @@ import Item from '../modelos/item.js';
 import { Op } from 'sequelize';
 import { respostaHelper } from '../utilitarios/helpers/respostaHelper.js';
 import { validationResult } from 'express-validator';
+import sharp from 'sharp';
+
+async function comprimirImagemBase64(foto_item) {
+  if (foto_item && foto_item.startsWith('data:image/')) {
+    const [header, base64Data] = foto_item.split(',');
+    const buffer = Buffer.from(base64Data, 'base64');
+
+    const outputBuffer = await sharp(buffer)
+      .resize({ width: 500 })
+      .jpeg({ quality: 80 })
+      .toBuffer();
+
+    return `${header.split(';')[0]};base64,${outputBuffer.toString('base64')}`;
+  }
+  return foto_item;
+}
 
 export const criarItem = async (req, res) => {
   const erros = validationResult(req);
@@ -14,7 +30,9 @@ export const criarItem = async (req, res) => {
   }
 
   try {
-    const { nome_item, desc_item, foto_item, categ_item, qntd_max_hospede, valor_item } = req.body;
+    let { nome_item, desc_item, foto_item, categ_item, qntd_max_hospede, valor_item } = req.body;
+
+    foto_item = await comprimirImagemBase64(foto_item);
 
     const novoItem = await Item.create({
       nome_item,
@@ -71,7 +89,11 @@ export const atualizarItem = async (req, res) => {
 
   try {
     const { id } = req.params;
-    const dadosAtualizados = req.body;
+    let dadosAtualizados = req.body;
+
+    if (dadosAtualizados.foto_item) {
+      dadosAtualizados.foto_item = await comprimirImagemBase64(dadosAtualizados.foto_item);
+    }
 
     const item = await Item.findByPk(id);
     if (!item) {

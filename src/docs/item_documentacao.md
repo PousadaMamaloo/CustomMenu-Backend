@@ -11,7 +11,7 @@
   {
     "nome_item": "string",
     "desc_item": "string",
-    "foto_item": "string",
+    "foto_item": "string (imagem em base64 no formato data URI)",
     "categ_item": "string",
     "qntd_max_hospede": "number",
     "valor_item": "number"
@@ -58,7 +58,7 @@
   {
     "nome_item": "string" (opcional),
     "desc_item": "string" (opcional),
-    "foto_item": "string" (opcional),
+    "foto_item": "string (imagem em base64 no formato data URI)" (opcional),
     "categ_item": "string" (opcional),
     "qntd_max_hospede": "number" (opcional),
     "valor_item": "number" (opcional)
