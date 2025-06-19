@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: ../CustomMenu-Backend
+    container_name: devBackend-menuMamaloo
+
+    dns:
+      - 8.8.8.8
+
+    ports:
+      - "3069:3000"
+
+    volumes:
+      - ../CustomMenu-Backend:/app
+      - /app/node_modules
+
+    working_dir: /app
+    command: npm run dev
+
+    env_file:
+      - .env.dev
+
+    networks:
+      - swag_default
+
+networks:
+  swag_default:
+    external: true
