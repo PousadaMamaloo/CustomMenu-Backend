@@ -172,3 +172,31 @@ export const listarCategoriasUnicas = async (req, res) => {
     }));
   }
 };
+
+export const buscarItem = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const item = await Item.findByPk(id);
+
+    if (!item) {
+      return res.status(404).json(respostaHelper({
+        status: 404,
+        message: `Item com ID ${id} não encontrado.`,
+      }));
+    }
+
+    return res.status(200).json(respostaHelper({
+      status: 200,
+      data: item,
+      message: 'Item encontrado com sucesso!'
+    }));
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json(respostaHelper({
+      status: 500,
+      message: 'Erro ao buscar item.',
+      errors: err.message
+    }));
+  }
+};
