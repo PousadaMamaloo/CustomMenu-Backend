@@ -1,6 +1,5 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/database.js';
-import Item from './item.js'; 
 
 const Evento = sequelize.define('Evento', {
   id_evento: {
@@ -20,6 +19,16 @@ const Evento = sequelize.define('Evento', {
     type: DataTypes.BOOLEAN,
     allowNull: false,
     defaultValue: true
+  },
+  recorrencia: {
+    type: DataTypes.BOOLEAN, // true = todos os dias
+    allowNull: false,
+    defaultValue: false
+  },
+  publico_alvo: {
+    type: DataTypes.BOOLEAN, // true = todos os quartos
+    allowNull: false,
+    defaultValue: false
   }
 }, {
   tableName: 'tab_evento',
