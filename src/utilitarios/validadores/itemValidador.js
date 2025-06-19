@@ -10,8 +10,8 @@ export const itemValidador = [
     .isLength({ max: 255 }).withMessage('A descrição do item deve ter no máximo 255 caracteres.'),
 
   body('foto_item')
-    .optional()
-    .isURL().withMessage('A foto do item deve ser uma URL válida.'),
+    .isString().withMessage('A foto do item deve ser uma string em base64.')
+    .notEmpty().withMessage('A foto do item é obrigatória.'),
 
   body('categ_item')
     .optional()
