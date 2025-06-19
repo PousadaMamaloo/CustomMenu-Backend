@@ -3,6 +3,9 @@ import Item from './item.js';
 import EventoItem from './eventoItem.js';
 import Pedido from './pedido.js';
 import ItemPedido from './itemPedido.js';
+import Quarto from './quarto.js';
+import EventoQuarto from './eventoQuarto.js';
+import EventoData from './eventoData.js';
 
 Evento.belongsToMany(Item, {
   through: EventoItem,
@@ -37,3 +40,23 @@ Evento.belongsToMany(Item, {
 
 Pedido.belongsTo(Evento, { foreignKey: 'id_evento' });
 Evento.hasMany(Pedido, { foreignKey: 'id_evento' });
+
+// Evento <-> Quarto
+Evento.belongsToMany(Quarto, {
+  through: EventoQuarto,
+  foreignKey: 'id_evento',
+  otherKey: 'id_quarto'
+});
+Quarto.belongsToMany(Evento, {
+  through: EventoQuarto,
+  foreignKey: 'id_quarto',
+  otherKey: 'id_evento'
+});
+
+// Evento <-> Data (relacionamento com datas específicas)
+Evento.hasMany(EventoData, {
+  foreignKey: 'id_evento'
+});
+EventoData.belongsTo(Evento, {
+  foreignKey: 'id_evento'
+});

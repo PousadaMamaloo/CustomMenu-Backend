@@ -9,8 +9,8 @@
   - `200 OK`: Lista de eventos retornada com sucesso.
     ```json
     [
-      { "id": 1, "nome": "Evento 1", "data": "YYYY-MM-DD", "horaInicio": "HH:MM", "horaFim": "HH:MM", ... },
-      { "id": 2, "nome": "Evento 2", "data": "YYYY-MM-DD", "horaInicio": "HH:MM", "horaFim": "HH:MM", ... }
+      { "id": 1, "nome": "Evento 1", "datas": ["YYYY-MM-DD", "YYYY-MM-DD"], "horaInicio": "HH:MM", "horarios": ["HH:MM"], ... },
+      { "id": 2, "nome": "Evento 2", "datas": ["YYYY-MM-DD"], "horarios": ["HH:MM", "HH:MM"], ... }
     ]
     ```
   - `401 Unauthorized`: Token de autenticação ausente ou inválido.
@@ -48,7 +48,11 @@
     "nome_evento": "string",
     "desc_evento": "string",
     "horarios": ["HH:MM"],
-    "sts_evento": "boolean"
+    "sts_evento": "boolean",
+    "recorrencia": "boolean",
+    "publico_alvo": "boolean",
+    "datas": ["YYYY-MM-DD"],
+    "quartos": [101, 102]
   }
   ```
 - **Respostas:**
@@ -78,7 +82,11 @@
     "nome_evento": "string" (opcional),
     "desc_evento": "string" (opcional),
     "horarios": ["HH:MM"] (opcional),
-    "sts_evento": "boolean" (opcional)
+    "sts_evento": "boolean" (opcional),
+    "recorrencia": "boolean" (opcional),
+    "publico_alvo": "boolean" (opcional),
+     "datas": ["YYYY-MM-DD", "YYYY-MM-DD"],
+    "quartos": [int]
   }
   ```
 - **Respostas:**
@@ -158,4 +166,30 @@
   - `403 Forbidden`: Usuário não autorizado.
   - `404 Not Found`: Evento ou item não encontrado.
   - `500 Internal Server Error`: Erro interno do servidor.
+
+### 9. Listar Quartos de um Evento
+
+- **Caminho:** `/api/eventos/:id/quartos`
+- **Método HTTP:** `GET`
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
+
+### 10. Adicionar Datas a um Evento
+
+- **Caminho:** `/api/eventos/:id/datas`
+- **Método HTTP:** `POST`
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
+- **Descrição:** Associa datas específicas ao evento.
+- **Corpo:**
+
+  ```json
+  {
+    "datas": ["2025-06-20", "2025-06-21"]
+  }
+  ```
+
+### 11. Listar Datas de um Evento
+
+- **Caminho:** `/api/eventos/:id/datas`
+- **Método HTTP:** `GET`
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
 

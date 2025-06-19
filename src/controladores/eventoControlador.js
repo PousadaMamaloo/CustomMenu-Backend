@@ -4,35 +4,51 @@ import sequelize from '../config/database.js';
 import { validationResult } from 'express-validator';
 import Horario from '../modelos/horario.js';
 import { respostaHelper } from '../utilitarios/helpers/respostaHelper.js'; 
-
+import EventoData from '../modelos/eventoData.js';
+import EventoQuarto from '../modelos/eventoQuarto.js';
+import Quarto from '../modelos/quarto.js';
 
 export const listarEventos = async (req, res) => {
     try {
-        
-        const [result] = await sequelize.query(`
-      SELECT e.id_evento, e.nome_evento, e.desc_evento, e.sts_evento,
-        array_agg(h.horario::text) AS horarios
-      FROM mamaloo.tab_evento e
-      LEFT JOIN mamaloo.tab_re_evento_horario reh ON reh.id_evento = e.id_evento
-      LEFT JOIN mamaloo.tab_horario h ON h.id_horario = reh.id_horario
-      GROUP BY e.id_evento, e.nome_evento, e.desc_evento, e.sts_evento
-      ORDER BY e.id_evento
-    `);
-
-        return res.status(200).json(respostaHelper({
-            status: 200,
-            mensagem: 'Eventos encontrados.',
-            data: result
-        }));
+      const [result] = await sequelize.query(`
+        SELECT 
+          e.id_evento, 
+          e.nome_evento, 
+          e.desc_evento, 
+          e.sts_evento,
+          e.recorrencia,
+          e.publico_alvo,
+          -- Agrupa horários
+          array_remove(array_agg(DISTINCT h.horario::text), NULL) AS horarios,
+          -- Agrupa datas específicas
+          array_remove(array_agg(DISTINCT to_char(red.data_evento, 'YYYY-MM-DD')), NULL) AS datas,
+          -- Agrupa quartos
+          array_remove(array_agg(DISTINCT q.numero_quarto), NULL) AS quartos
+        FROM mamaloo.tab_evento e
+        -- LEFT JOINs
+        LEFT JOIN mamaloo.tab_re_evento_horario reh ON reh.id_evento = e.id_evento
+        LEFT JOIN mamaloo.tab_horario h ON h.id_horario = reh.id_horario
+        LEFT JOIN mamaloo.tab_re_evento_data red ON red.id_evento = e.id_evento
+        LEFT JOIN mamaloo.tab_re_evento_quarto req ON req.id_evento = e.id_evento
+        LEFT JOIN mamaloo.tab_quarto q ON q.id_quarto = req.id_quarto
+        GROUP BY e.id_evento, e.nome_evento, e.desc_evento, e.sts_evento, e.recorrencia, e.publico_alvo
+        ORDER BY e.id_evento;
+      `);
+  
+      return res.status(200).json(respostaHelper({
+        status: 200,
+        mensagem: 'Eventos encontrados.',
+        data: result
+      }));
     } catch (err) {
-        console.error("Erro ao buscar eventos:", err);
-        return res.status(500).json(respostaHelper({
-            status: 500,
-            mensagem: 'Erro ao buscar eventos.',
-            errors: [err.message]
-        }));
+      console.error("Erro ao buscar eventos:", err);
+      return res.status(500).json(respostaHelper({
+        status: 500,
+        mensagem: 'Erro ao buscar eventos.',
+        errors: [err.message]
+      }));
     }
-};
+  };  
 
 
 export const listarItensPorEvento = async (req, res) => {
@@ -228,39 +244,68 @@ export const criarEvento = async (req, res) => {
             errors: erros.array()
         }));
     }
-    const { nome_evento, desc_evento, horarios, sts_evento } = req.body;
 
-    const t = await sequelize.transaction(); 
+    const {
+        nome_evento, desc_evento, horarios,
+        sts_evento, recorrencia, publico_alvo,
+        datas, quartos
+    } = req.body;
+
+    const t = await sequelize.transaction();
 
     try {
-        const evento = await Evento.create({ nome_evento, desc_evento, sts_evento }, { transaction: t });
+        const evento = await Evento.create({
+            nome_evento, desc_evento, sts_evento,
+            recorrencia, publico_alvo
+        }, { transaction: t });
 
         if (horarios && horarios.length > 0) {
             for (const horario of horarios) {
-                let [hor, created] = await Horario.findOrCreate({
+                const [hor] = await Horario.findOrCreate({
                     where: { horario },
                     transaction: t
                 });
-                
                 await sequelize.query(`
                     INSERT INTO mamaloo.tab_re_evento_horario (id_evento, id_horario)
                     VALUES (:id_evento, :id_horario)
                 `, {
-                    replacements: { id_evento: evento.id_evento, id_horario: hor.id_horario },
+                    replacements: {
+                        id_evento: evento.id_evento,
+                        id_horario: hor.id_horario
+                    },
                     transaction: t
                 });
             }
         }
 
-        await t.commit(); 
+        if (!recorrencia && datas?.length) {
+            for (const data of datas) {
+                await EventoData.create({
+                    id_evento: evento.id_evento,
+                    data_evento: data
+                }, { transaction: t });
+            }
+        }
+
+        if (!publico_alvo && quartos?.length) {
+            for (const id_quarto of quartos) {
+                await EventoQuarto.create({
+                    id_evento: evento.id_evento,
+                    id_quarto
+                }, { transaction: t });
+            }
+        }
+
+        await t.commit();
 
         return res.status(201).json(respostaHelper({
             status: 201,
             mensagem: 'Evento criado com sucesso.',
             data: { id_evento: evento.id_evento }
         }));
+
     } catch (err) {
-        await t.rollback(); 
+        await t.rollback();
         console.error("Erro ao criar evento:", err);
         return res.status(500).json(respostaHelper({
             status: 500,
@@ -280,10 +325,15 @@ export const atualizarEvento = async (req, res) => {
             errors: erros.array()
         }));
     }
-    const { id } = req.params;
-    const { nome_evento, desc_evento, horarios, sts_evento } = req.body;
 
-    const t = await sequelize.transaction(); 
+    const { id } = req.params;
+    const {
+        nome_evento, desc_evento, horarios,
+        sts_evento, recorrencia, publico_alvo,
+        datas, quartos
+    } = req.body;
+
+    const t = await sequelize.transaction();
 
     try {
         const evento = await Evento.findByPk(id, { transaction: t });
@@ -295,35 +345,67 @@ export const atualizarEvento = async (req, res) => {
             }));
         }
 
-        await evento.update({ nome_evento, desc_evento, sts_evento }, { transaction: t });
+        await evento.update({
+            nome_evento, desc_evento, sts_evento,
+            recorrencia, publico_alvo
+        }, { transaction: t });
 
-        
-        await sequelize.query(`
-            DELETE FROM mamaloo.tab_re_evento_horario WHERE id_evento = :id_evento
-        `, { replacements: { id_evento: id }, transaction: t });
+        // Remover e reinserir horários
+        await sequelize.query(
+            `DELETE FROM mamaloo.tab_re_evento_horario WHERE id_evento = :id_evento`,
+            { replacements: { id_evento: id }, transaction: t }
+        );
 
-        
         if (horarios && horarios.length > 0) {
             for (const horario of horarios) {
-                let [hor, created] = await Horario.findOrCreate({
+                const [hor] = await Horario.findOrCreate({
                     where: { horario },
                     transaction: t
                 });
                 await sequelize.query(`
                     INSERT INTO mamaloo.tab_re_evento_horario (id_evento, id_horario)
                     VALUES (:id_evento, :id_horario)
-                `, { replacements: { id_evento: id, id_horario: hor.id_horario }, transaction: t });
+                `, {
+                    replacements: {
+                        id_evento: id,
+                        id_horario: hor.id_horario
+                    },
+                    transaction: t
+                });
             }
         }
 
-        await t.commit(); 
+        // Atualizar datas (se não for recorrente)
+        await EventoData.destroy({ where: { id_evento: id }, transaction: t });
+        if (!recorrencia && datas?.length) {
+            for (const data of datas) {
+                await EventoData.create({
+                    id_evento: id,
+                    data_evento: data
+                }, { transaction: t });
+            }
+        }
+
+        // Atualizar quartos (se não for público geral)
+        await EventoQuarto.destroy({ where: { id_evento: id }, transaction: t });
+        if (!publico_alvo && quartos?.length) {
+            for (const id_quarto of quartos) {
+                await EventoQuarto.create({
+                    id_evento: id,
+                    id_quarto
+                }, { transaction: t });
+            }
+        }
+
+        await t.commit();
 
         return res.status(200).json(respostaHelper({
             status: 200,
             mensagem: 'Evento atualizado com sucesso.'
         }));
+
     } catch (err) {
-        await t.rollback(); 
+        await t.rollback();
         console.error(`Erro ao atualizar evento ${id}:`, err);
         return res.status(500).json(respostaHelper({
             status: 500,
