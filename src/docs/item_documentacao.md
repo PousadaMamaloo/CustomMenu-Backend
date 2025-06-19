@@ -110,3 +110,29 @@
     ```
   - `401 Unauthorized`: Token de autenticação ausente ou inválido.
   - `500 Internal Server Error`: Erro interno do servidor.
+
+### 6. Listar Item por ID
+
+- **Caminho:** `/api/itens/listar/:id`
+- **Método HTTP:** `GET`
+- **Autenticação:** Necessária (via `autenticador`)
+- **Descrição:** Retorna as informações detalhadas de um item específico pelo seu ID.
+- **Parâmetros de Caminho:**
+  - `id`: ID do item (number).
+- **Respostas:**
+  - `200 OK`: tem encontrado com sucesso..
+    ```json
+    {
+      "id": number,
+      "nome_item": "string",
+      "desc_item": "string",
+      "foto_item": "string (imagem em base64 no formato data URI)",
+      "categ_item": "string",
+      "qntd_max_hospede": number,
+      "valor_item": number
+    }
+    ```
+
+  - `404 Not Found`: Item não encontrado.
+  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `500 Internal Server Error`: Erro interno do servidor.
