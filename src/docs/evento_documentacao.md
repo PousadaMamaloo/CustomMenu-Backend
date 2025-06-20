@@ -193,3 +193,26 @@
 - **Método HTTP:** `GET`
 - **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
 
+
+
+### 8. Listar Eventos para Hóspede
+- **Caminho:** `/api/eventos/hospede`
+- **Método HTTP:** `GET`
+- **Autenticação:** Necessária (via `autenticador`)
+- **Descrição:** Lista os eventos disponíveis para o hóspede logado, considerando recorrência, datas específicas e quartos associados.
+- **Respostas:**
+  - `200 OK`: Lista de eventos retornada com sucesso.
+    ```json
+    [
+      { "id_evento": 1, "nome_evento": "Evento Recorrente", "desc_evento": "Descrição", "sts_evento": true, "recorrencia": true, "publico_alvo": true, "horarios": ["HH:MM"], "datas": [], "quartos": [] },
+      { "id_evento": 2, "nome_evento": "Evento do Quarto", "desc_evento": "Descrição", "sts_evento": true, "recorrencia": false, "publico_alvo": false, "horarios": ["HH:MM"], "datas": [], "quartos": ["num_quarto"] }
+    ]
+    ```
+  - `400 Bad Request`: Número do quarto do hóspede não encontrado no token.
+  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `404 Not Found`: Quarto do hóspede não encontrado.
+  - `500 Internal Server Error`: Erro interno do servidor.
+
+
+
+

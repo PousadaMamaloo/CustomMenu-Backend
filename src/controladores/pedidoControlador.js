@@ -3,6 +3,7 @@ import Item from '../modelos/item.js';
 import itemPedido from '../modelos/itemPedido.js';
 import Evento from '../modelos/evento.js';
 import Quarto from '../modelos/quarto.js';
+import EventoData from '../modelos/eventoData.js';
 import { respostaHelper } from '../utilitarios/helpers/respostaHelper.js';
 import { validationResult } from 'express-validator';
 
@@ -206,3 +207,257 @@ export const listarPedidosPorQuarto = async (req, res) => {
     }));
   }
 };
+
+// GET /api/pedidos/eventos/ativos
+export const listarPedidosEventosAtivos = async (req, res) => {
+  try {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0); // Normaliza para o início do dia
+
+    const pedidos = await Pedido.findAll({
+      include: [
+        {
+          model: Evento,
+          where: {
+            sts_evento: true
+          },
+          required: true
+        },
+        {
+          model: Item,
+          through: { attributes: ['qntd_item'] }
+        },
+        {
+          model: Quarto,
+          attributes: ['num_quarto']
+        }
+      ],
+      order: [['data_pedido', 'DESC']]
+    });
+
+    // Filtrar pedidos de eventos ativos na data atual
+    const pedidosFiltrados = [];
+    
+    for (const pedido of pedidos) {
+      const evento = pedido.Evento;
+      let eventoAtivo = false;
+
+      // Se o evento é recorrente (todos os dias), está sempre ativo
+      if (evento.recorrencia) {
+        eventoAtivo = true;
+      } else {
+        // Verificar se há data específica para hoje
+        const dataEvento = await EventoData.findOne({
+          where: {
+            id_evento: evento.id_evento,
+            data_evento: hoje
+          }
+        });
+        if (dataEvento) {
+          eventoAtivo = true;
+        }
+      }
+
+      if (eventoAtivo) {
+        pedidosFiltrados.push({
+          id_pedido: pedido.id_pedido,
+          data_pedido: pedido.data_pedido,
+          quarto: pedido.Quarto.num_quarto,
+          evento: {
+            id_evento: evento.id_evento,
+            nome_evento: evento.nome_evento,
+            desc_evento: evento.desc_evento
+          },
+          itens: pedido.Items.map(item => ({
+            id_item: item.id_item,
+            nome_item: item.nome_item,
+            quantidade: item.itemPedido.qntd_item,
+            valor_unitario: item.valor_item,
+            valor_total: item.valor_item * item.itemPedido.qntd_item
+          }))
+        });
+      }
+    }
+
+    return res.status(200).json(respostaHelper({
+      status: 200,
+      message: 'Pedidos de eventos ativos listados com sucesso.',
+      data: pedidosFiltrados
+    }));
+
+  } catch (err) {
+    console.error('Erro ao listar pedidos de eventos ativos:', err);
+    return res.status(500).json(respostaHelper({
+      status: 500,
+      message: 'Erro ao listar pedidos de eventos ativos.',
+      errors: [err.message]
+    }));
+  }
+};
+
+// GET /api/pedidos/relatorio/:idEvento
+export const relatorioGeralEvento = async (req, res) => {
+  try {
+    const { idEvento } = req.params;
+
+    const evento = await Evento.findByPk(idEvento);
+    if (!evento) {
+      return res.status(404).json(respostaHelper({
+        status: 404,
+        message: 'Evento não encontrado.'
+      }));
+    }
+
+    const pedidos = await Pedido.findAll({
+      where: { id_evento: idEvento },
+      include: [
+        {
+          model: Item,
+          through: { attributes: ['qntd_item'] }
+        },
+        {
+          model: Quarto,
+          attributes: ['num_quarto']
+        }
+      ],
+      order: [['data_pedido', 'DESC']]
+    });
+
+    let totalPedidos = pedidos.length;
+    let valorTotal = 0;
+    let itensResumo = {};
+    let quartos = new Set();
+
+    pedidos.forEach(pedido => {
+      quartos.add(pedido.Quarto.num_quarto);
+      
+      pedido.Items.forEach(item => {
+        const quantidade = item.itemPedido.qntd_item;
+        const valorItem = item.valor_item * quantidade;
+        valorTotal += valorItem;
+
+        if (itensResumo[item.nome_item]) {
+          itensResumo[item.nome_item].quantidade += quantidade;
+          itensResumo[item.nome_item].valor_total += valorItem;
+        } else {
+          itensResumo[item.nome_item] = {
+            nome_item: item.nome_item,
+            quantidade: quantidade,
+            valor_unitario: item.valor_item,
+            valor_total: valorItem
+          };
+        }
+      });
+    });
+
+    const relatorio = {
+      evento: {
+        id_evento: evento.id_evento,
+        nome_evento: evento.nome_evento,
+        desc_evento: evento.desc_evento
+      },
+      resumo: {
+        total_pedidos: totalPedidos,
+        total_quartos_participantes: quartos.size,
+        valor_total: valorTotal
+      },
+      itens_mais_pedidos: Object.values(itensResumo).sort((a, b) => b.quantidade - a.quantidade),
+      pedidos_detalhados: pedidos.map(pedido => ({
+        id_pedido: pedido.id_pedido,
+        data_pedido: pedido.data_pedido,
+        quarto: pedido.Quarto.num_quarto,
+        itens: pedido.Items.map(item => ({
+          nome_item: item.nome_item,
+          quantidade: item.itemPedido.qntd_item,
+          valor_unitario: item.valor_item,
+          valor_total: item.valor_item * item.itemPedido.qntd_item
+        }))
+      }))
+    };
+
+    return res.status(200).json(respostaHelper({
+      status: 200,
+      message: 'Relatório geral do evento gerado com sucesso.',
+      data: relatorio
+    }));
+
+  } catch (err) {
+    console.error('Erro ao gerar relatório do evento:', err);
+    return res.status(500).json(respostaHelper({
+      status: 500,
+      message: 'Erro ao gerar relatório do evento.',
+      errors: [err.message]
+    }));
+  }
+};
+
+// GET /api/pedidos/historico
+export const historicoComPaginacao = async (req, res) => {
+  try {
+    const { page = 1, limit = 50 } = req.query;
+    const offset = (page - 1) * limit;
+
+    const { count, rows: pedidos } = await Pedido.findAndCountAll({
+      include: [
+        {
+          model: Item,
+          through: { attributes: ['qntd_item'] }
+        },
+        {
+          model: Evento,
+          attributes: ['nome_evento', 'desc_evento']
+        },
+        {
+          model: Quarto,
+          attributes: ['num_quarto']
+        }
+      ],
+      order: [['data_pedido', 'DESC']],
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    });
+
+    const totalPages = Math.ceil(count / limit);
+
+    const pedidosFormatados = pedidos.map(pedido => ({
+      id_pedido: pedido.id_pedido,
+      data_pedido: pedido.data_pedido,
+      quarto: pedido.Quarto.num_quarto,
+      evento: pedido.Evento ? {
+        nome_evento: pedido.Evento.nome_evento,
+        desc_evento: pedido.Evento.desc_evento
+      } : null,
+      itens: pedido.Items.map(item => ({
+        nome_item: item.nome_item,
+        quantidade: item.itemPedido.qntd_item,
+        valor_unitario: item.valor_item,
+        valor_total: item.valor_item * item.itemPedido.qntd_item
+      })),
+      valor_total_pedido: pedido.Items.reduce((total, item) => 
+        total + (item.valor_item * item.itemPedido.qntd_item), 0)
+    }));
+
+    return res.status(200).json(respostaHelper({
+      status: 200,
+      message: 'Histórico de pedidos listado com sucesso.',
+      data: {
+        pedidos: pedidosFormatados,
+        paginacao: {
+          pagina_atual: parseInt(page),
+          total_paginas: totalPages,
+          total_registros: count,
+          registros_por_pagina: parseInt(limit)
+        }
+      }
+    }));
+
+  } catch (err) {
+    console.error('Erro ao listar histórico de pedidos:', err);
+    return res.status(500).json(respostaHelper({
+      status: 500,
+      message: 'Erro ao listar histórico de pedidos.',
+      errors: [err.message]
+    }));
+  }
+};
+

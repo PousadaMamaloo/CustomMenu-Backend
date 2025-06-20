@@ -4,7 +4,10 @@ import {
   obterPedido,
   atualizarPedido,
   deletarPedido,
-  listarPedidosPorQuarto
+  listarPedidosPorQuarto,
+  listarPedidosEventosAtivos,
+  relatorioGeralEvento,
+  historicoComPaginacao
 } from '../controladores/pedidoControlador.js';
 import { pedidoValidadorCriar, pedidoValidadorAtualizar } from '../utilitarios/validadores/pedidoValidador.js';
 import autorizaAdministrador from '../utilitarios/autenticacao/autorizaAdministrador.js';
@@ -25,3 +28,11 @@ router.delete('/:idPedido', autorizaAdministrador, deletarPedido);
 router.get('/quarto/:numQuarto', listarPedidosPorQuarto);
 
 export default router;
+
+// Novas rotas para as funcionalidades solicitadas
+router.get('/eventos/ativos', autorizaAdministrador, listarPedidosEventosAtivos);
+
+router.get('/relatorio/:idEvento', autorizaAdministrador, relatorioGeralEvento);
+
+router.get('/historico', autorizaAdministrador, historicoComPaginacao);
+
