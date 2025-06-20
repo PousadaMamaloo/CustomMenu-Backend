@@ -136,3 +136,141 @@
   - `500 Internal Server Error`: Erro interno do servidor.
 
 
+
+
+### 6. Listar Pedidos de Eventos Ativos
+- **Caminho:** `/api/pedidos/eventos/ativos`
+- **Método HTTP:** `GET`
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
+- **Descrição:** Lista todos os pedidos associados a eventos que estão ativos na data atual (recorrentes ou com data específica para hoje).
+- **Respostas:**
+  - `200 OK`: Pedidos de eventos ativos listados com sucesso.
+    ```json
+    [
+      {
+        "id_pedido": "number",
+        "data_pedido": "YYYY-MM-DDTHH:MM:SS.sssZ",
+        "quarto": "string" (número do quarto),
+        "evento": {
+          "id_evento": "number",
+          "nome_evento": "string",
+          "desc_evento": "string"
+        },
+        "itens": [
+          {
+            "id_item": "number",
+            "nome_item": "string",
+            "quantidade": "number",
+            "valor_unitario": "number",
+            "valor_total": "number"
+          }
+        ]
+      }
+    ]
+    ```
+  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `403 Forbidden`: Usuário não autorizado.
+  - `500 Internal Server Error`: Erro interno do servidor.
+
+### 7. Relatório Geral de Evento
+- **Caminho:** `/api/pedidos/relatorio/:idEvento`
+- **Método HTTP:** `GET`
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
+- **Descrição:** Gera um relatório detalhado para um evento específico, incluindo resumo de pedidos, itens mais vendidos e pedidos detalhados.
+- **Parâmetros de Caminho:**
+  - `idEvento`: ID do evento (number).
+- **Respostas:**
+  - `200 OK`: Relatório gerado com sucesso.
+    ```json
+    {
+      "mensagem": "Relatório geral do evento gerado com sucesso!",
+      "data": {
+        "evento": {
+          "id_evento": "number",
+          "nome_evento": "string",
+          "desc_evento": "string"
+        },
+        "resumo": {
+          "total_pedidos": "number",
+          "total_quartos_participantes": "number",
+          "valor_total": "number"
+        },
+        "itens_mais_pedidos": [
+          {
+            "nome_item": "string",
+            "quantidade": "number",
+            "valor_unitario": "number",
+            "valor_total": "number"
+          }
+        ],
+        "pedidos_detalhados": [
+          {
+            "id_pedido": "number",
+            "data_pedido": "YYYY-MM-DDTHH:MM:SS.sssZ",
+            "quarto": "string" (número do quarto),
+            "itens": [
+              {
+                "nome_item": "string",
+                "quantidade": "number",
+                "valor_unitario": "number",
+                "valor_total": "number"
+              }
+            ]
+          }
+        ]
+      }
+    }
+    ```
+  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `403 Forbidden`: Usuário não autorizado.
+  - `404 Not Found`: Evento não encontrado.
+  - `500 Internal Server Error`: Erro interno do servidor.
+
+### 8. Histórico de Pedidos com Paginação
+- **Caminho:** `/api/pedidos/historico`
+- **Método HTTP:** `GET`
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
+- **Descrição:** Lista o histórico de todos os pedidos com suporte a paginação.
+- **Parâmetros de Query:**
+  - `page`: Número da página (padrão: 1).
+  - `limit`: Quantidade de registros por página (padrão: 50).
+- **Respostas:**
+  - `200 OK`: Histórico de pedidos listado com sucesso.
+    ```json
+    {
+      "mensagem": "Histórico de pedidos listado com sucesso!",
+      "data": {
+        "pedidos": [
+          {
+            "id_pedido": "number",
+            "data_pedido": "YYYY-MM-DDTHH:MM:SS.sssZ",
+            "quarto": "string" (número do quarto),
+            "evento": {
+              "nome_evento": "string",
+              "desc_evento": "string"
+            } (ou null),
+            "itens": [
+              {
+                "nome_item": "string",
+                "quantidade": "number",
+                "valor_unitario": "number",
+                "valor_total": "number"
+              }
+            ],
+            "valor_total_pedido": "number"
+          }
+        ],
+        "paginacao": {
+          "pagina_atual": "number",
+          "total_paginas": "number",
+          "total_registros": "number",
+          "registros_por_pagina": "number"
+        }
+      }
+    }
+    ```
+  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `403 Forbidden`: Usuário não autorizado.
+  - `500 Internal Server Error`: Erro interno do servidor.
+
+
