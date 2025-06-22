@@ -455,3 +455,76 @@ export const excluirEvento = async (req, res) => {
         }));
     }
 };
+
+
+export const listarEventosHospede = async (req, res) => {
+    try {
+        const { id_hospede, num_quarto } = req.user; // Assumindo que o id_hospede e num_quarto estão no token
+
+        if (!num_quarto) {
+            return res.status(400).json(respostaHelper({
+                status: 400,
+                mensagem: 'Número do quarto do hóspede não encontrado no token.'
+            }));
+        }
+
+        const quarto = await Quarto.findOne({ where: { num_quarto } });
+        if (!quarto) {
+            return res.status(404).json(respostaHelper({
+                status: 404,
+                mensagem: 'Quarto do hóspede não encontrado.'
+            }));
+        }
+
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0); // Normaliza para o início do dia
+
+        const [eventos] = await sequelize.query(`
+            SELECT 
+                e.id_evento, 
+                e.nome_evento, 
+                e.desc_evento, 
+                e.sts_evento,
+                e.recorrencia,
+                e.publico_alvo,
+                array_remove(array_agg(DISTINCT h.horario::text), NULL) AS horarios,
+                array_remove(array_agg(DISTINCT to_char(red.data_evento, 'YYYY-MM-DD')), NULL) AS datas,
+                array_remove(array_agg(DISTINCT q.numero_quarto), NULL) AS quartos
+            FROM mamaloo.tab_evento e
+            LEFT JOIN mamaloo.tab_re_evento_horario reh ON reh.id_evento = e.id_evento
+            LEFT JOIN mamaloo.tab_horario h ON h.id_horario = reh.id_horario
+            LEFT JOIN mamaloo.tab_re_evento_data red ON red.id_evento = e.id_evento
+            LEFT JOIN mamaloo.tab_re_evento_quarto req ON req.id_evento = e.id_evento
+            LEFT JOIN mamaloo.tab_quarto q ON q.id_quarto = req.id_quarto
+            WHERE e.sts_evento = TRUE AND (
+                e.recorrencia = TRUE OR 
+                e.publico_alvo = TRUE OR 
+                red.data_evento = :hoje OR 
+                req.id_quarto = :id_quarto
+            )
+            GROUP BY e.id_evento, e.nome_evento, e.desc_evento, e.sts_evento, e.recorrencia, e.publico_alvo
+            ORDER BY e.id_evento;
+        `, {
+            replacements: {
+                hoje: hoje.toISOString().split('T')[0], // Formata para YYYY-MM-DD
+                id_quarto: quarto.id_quarto
+            }
+        });
+
+        return res.status(200).json(respostaHelper({
+            status: 200,
+            mensagem: 'Eventos disponíveis para o hóspede listados com sucesso.',
+            data: eventos
+        }));
+
+    } catch (err) {
+        console.error('Erro ao listar eventos para hóspede:', err);
+        return res.status(500).json(respostaHelper({
+            status: 500,
+            mensagem: 'Erro ao listar eventos para hóspede.',
+            errors: [err.message]
+        }));
+    }
+};
+
+

@@ -126,8 +126,8 @@ Esta documentação detalha os endpoints da API CustomMenu-Backend, incluindo m�
 - **Corpo da Requisição (JSON):**
   ```json
   {
-    "email": "string",
-    "senha": "string"
+    "num_quarto": "string",
+    "telef_hospede": "string"
   }
   ```
 - **Respostas:**
@@ -149,11 +149,11 @@ Esta documentação detalha os endpoints da API CustomMenu-Backend, incluindo m�
 - **Corpo da Requisição (JSON):**
   ```json
   {
-    "nome": "string",
-    "email": "string",
-    "senha": "string",
-    "telefone": "string",
-    "quartoId": "number"
+    "nome_hospede": "string",
+    "email_hospede": "string",
+    "telef_hospede": "string",
+    "data_chegada": "YYYY-MM-DD",
+    "data_saida": "YYYY-MM-DD"
   }
   ```
 - **Respostas:**
@@ -216,11 +216,11 @@ Esta documentação detalha os endpoints da API CustomMenu-Backend, incluindo m�
 - **Corpo da Requisição (JSON):**
   ```json
   {
-    "nome": "string" (opcional),
-    "email": "string" (opcional),
-    "senha": "string" (opcional),
-    "telefone": "string" (opcional),
-    "quartoId": "number" (opcional)
+    "nome_hospede": "string" (opcional),
+    "email_hospede": "string" (opcional),
+    "telef_hospede": "string" (opcional),
+    "data_chegada": "YYYY-MM-DD" (opcional),
+    "data_saida": "YYYY-MM-DD" (opcional)
   }
   ```
 - **Respostas:**
@@ -266,7 +266,7 @@ Esta documentação detalha os endpoints da API CustomMenu-Backend, incluindo m�
 - **Corpo da Requisição (JSON):**
   ```json
   {
-    "email": "string",
+    "usuario": "string",
     "senha": "string"
   }
   ```
@@ -294,11 +294,12 @@ Esta documentação detalha os endpoints da API CustomMenu-Backend, incluindo m�
 - **Corpo da Requisição (JSON):**
   ```json
   {
-    "nome": "string",
-    "descricao": "string",
-    "preco": "number",
-    "categoria": "string",
-    "disponivel": "boolean"
+    "nome_item": "string",
+    "desc_item": "string",
+    "foto_item": "string",
+    "categ_item": "string",
+    "qntd_max_hospede": "number",
+    "valor_item": "number"
   }
   ```
 - **Respostas:**
@@ -340,11 +341,12 @@ Esta documentação detalha os endpoints da API CustomMenu-Backend, incluindo m�
 - **Corpo da Requisição (JSON):**
   ```json
   {
-    "nome": "string" (opcional),
-    "descricao": "string" (opcional),
-    "preco": "number" (opcional),
-    "categoria": "string" (opcional),
-    "disponivel": "boolean" (opcional)
+    "nome_item": "string" (opcional),
+    "desc_item": "string" (opcional),
+    "foto_item": "string" (opcional),
+    "categ_item": "string" (opcional),
+    "qntd_max_hospede": "number" (opcional),
+    "valor_item": "number" (opcional)
   }
   ```
 - **Respostas:**
@@ -397,7 +399,7 @@ Esta documentação detalha os endpoints da API CustomMenu-Backend, incluindo m�
 
 
 
-## Rotas de Eventos (`/api/eventos`)
+## Rotas de Eventos (`/api/eventos## Rotas de Eventos (`/api/eventos`)
 
 ### 1. Listar Eventos
 - **Caminho:** `/api/eventos/`
@@ -408,8 +410,8 @@ Esta documentação detalha os endpoints da API CustomMenu-Backend, incluindo m�
   - `200 OK`: Lista de eventos retornada com sucesso.
     ```json
     [
-      { "id": 1, "nome": "Evento 1", "data": "YYYY-MM-DD", "horaInicio": "HH:MM", "horaFim": "HH:MM", ... },
-      { "id": 2, "nome": "Evento 2", "data": "YYYY-MM-DD", "horaInicio": "HH:MM", "horaFim": "HH:MM", ... }
+      { "id": 1, "nome": "Evento 1", "datas": ["YYYY-MM-DD", "YYYY-MM-DD"], "horaInicio": "HH:MM", "horarios": ["HH:MM"], ... },
+      { "id": 2, "nome": "Evento 2", "datas": ["YYYY-MM-DD"], "horarios": ["HH:MM", "HH:MM"], ... }
     ]
     ```
   - `401 Unauthorized`: Token de autenticação ausente ou inválido.
@@ -444,11 +446,14 @@ Esta documentação detalha os endpoints da API CustomMenu-Backend, incluindo m�
 - **Corpo da Requisição (JSON):**
   ```json
   {
-    "nome": "string",
-    "data": "YYYY-MM-DD",
-    "horaInicio": "HH:MM",
-    "horaFim": "HH:MM",
-    "descricao": "string" (opcional)
+    "nome_evento": "string",
+    "desc_evento": "string",
+    "horarios": ["HH:MM"],
+    "sts_evento": "boolean",
+    "recorrencia": "boolean",
+    "publico_alvo": "boolean",
+    "datas": ["YYYY-MM-DD"],
+    "quartos": [101, 102]
   }
   ```
 - **Respostas:**
@@ -475,11 +480,14 @@ Esta documentação detalha os endpoints da API CustomMenu-Backend, incluindo m�
 - **Corpo da Requisição (JSON):**
   ```json
   {
-    "nome": "string" (opcional),
-    "data": "YYYY-MM-DD" (opcional),
-    "horaInicio": "HH:MM" (opcional),
-    "horaFim": "HH:MM" (opcional),
-    "descricao": "string" (opcional)
+    "nome_evento": "string" (opcional),
+    "desc_evento": "string" (opcional),
+    "horarios": ["HH:MM"] (opcional),
+    "sts_evento": "boolean" (opcional),
+    "recorrencia": "boolean" (opcional),
+    "publico_alvo": "boolean" (opcional),
+     "datas": ["YYYY-MM-DD", "YYYY-MM-DD"],
+    "quartos": [int]
   }
   ```
 - **Respostas:**
@@ -514,48 +522,453 @@ Esta documentação detalha os endpoints da API CustomMenu-Backend, incluindo m�
   - `404 Not Found`: Evento não encontrado.
   - `500 Internal Server Error`: Erro interno do servidor.
 
-
-
-
-## Rotas de Itens de Evento (`/api/eventoItem`)
-
-### 1. Associar Item a Evento
-- **Caminho:** `/api/eventoItem/`
+### 6. Vincular Itens a Evento
+- **Caminho:** `/api/eventos/:id/itens`
 - **Método HTTP:** `POST`
-- **Autenticação:** Necessária (via `autenticador`)
-- **Validação:** `eventoItemValidador`, `validarRequisicao`
-- **Descrição:** Associa um item a um evento.
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
+- **Descrição:** Vincula um ou mais itens a um evento específico.
+- **Parâmetros de Caminho:**
+  - `id`: ID do evento (number).
 - **Corpo da Requisição (JSON):**
   ```json
   {
-    "eventoId": "number",
-    "itemId": "number"
+    "itensIds": ["number"]
   }
   ```
 - **Respostas:**
-  - `201 Created`: Item associado ao evento com sucesso.
+  - `200 OK`: Itens vinculados com sucesso.
     ```json
     {
-      "mensagem": "Item associado ao evento com sucesso!",
-      "associacao": { ... }
+      "mensagem": "Itens vinculados ao evento com sucesso!"
     }
     ```
   - `400 Bad Request`: Dados inválidos fornecidos.
   - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `403 Forbidden`: Usuário não autorizado.
+  - `404 Not Found`: Evento ou itens não encontrados.
   - `500 Internal Server Error`: Erro interno do servidor.
 
-### 2. Listar Associações de Itens de Evento
-- **Caminho:** `/api/eventoItem/`
+### 7. Desvincular Item de Evento
+- **Caminho:** `/api/eventos/:id/itens/:id_item`
+- **Método HTTP:** `DELETE`
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
+- **Descrição:** Desvincula um item de um evento específico.
+- **Parâmetros de Caminho:**
+  - `id`: ID do evento (number).
+  - `id_item`: ID do item a ser desvinculado (number).
+- **Respostas:**
+  - `200 OK`: Item desvinculado com sucesso.
+    ```json
+    {
+      "mensagem": "Item desvinculado do evento com sucesso!"
+    }
+    ```
+  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `403 Forbidden`: Usuário não autorizado.
+  - `404 Not Found`: Evento ou item não encontrado.
+  - `500 Internal Server Error`: Erro interno do servidor.
+
+### 9. Listar Quartos de um Evento
+
+- **Caminho:** `/api/eventos/:id/quartos`
+- **Método HTTP:** `GET`
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
+
+### 10. Adicionar Datas a um Evento
+
+- **Caminho:** `/api/eventos/:id/datas`
+- **Método HTTP:** `POST`
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
+- **Descrição:** Associa datas específicas ao evento.
+- **Corpo:**
+
+  ```json
+  {
+    "datas": ["2025-06-20", "2025-06-21"]
+  }
+  ```
+
+### 11. Listar Datas de um Evento
+
+- **Caminho:** `/api/eventos/:id/datas`
+- **Método HTTP:** `GET`
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
+
+
+
+### 8. Listar Eventos para Hóspede
+- **Caminho:** `/api/eventos/hospede`
 - **Método HTTP:** `GET`
 - **Autenticação:** Necessária (via `autenticador`)
-- **Descrição:** Lista todas as associações entre itens e eventos.
+- **Descrição:** Lista os eventos disponíveis para o hóspede logado, considerando recorrência, datas específicas e quartos associados.
 - **Respostas:**
-  - `200 OK`: Lista de associações retornada com sucesso.
+  - `200 OK`: Lista de eventos retornada com sucesso.
     ```json
     [
-      { "id": 1, "eventoId": 1, "itemId": 1, "createdAt": "...", "updatedAt": "..." },
-      { "id": 2, "eventoId": 1, "itemId": 2, "createdAt": "...", "updatedAt": "..." }
+      { "id_evento": 1, "nome_evento": "Evento Recorrente", "desc_evento": "Descrição", "sts_evento": true, "recorrencia": true, "publico_alvo": true, "horarios": ["HH:MM"], "datas": [], "quartos": [] },
+      { "id_evento": 2, "nome_evento": "Evento do Quarto", "desc_evento": "Descrição", "sts_evento": true, "recorrencia": false, "publico_alvo": false, "horarios": ["HH:MM"], "datas": [], "quartos": ["num_quarto"] }
+    ]
+    ```
+  - `400 Bad Request`: Número do quarto do hóspede não encontrado no token.
+  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `404 Not Found`: Quarto do hóspede não encontrado.
+  - `500 Internal Server Error`: Erro interno do servidor.
+
+
+
+
+ inválidos fornecidos.
+  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `403 Forbidden`: Usuário não autorizado.
+  - `404 Not Found`: Evento ou itens não encontrados.
+  - `500 Internal Server Error`: Erro interno do servidor.
+
+### 7. Desvincular Item de Evento
+- **Caminho:** `/api/eventos/:id/itens/:id_item`
+- **Método HTTP:** `DELETE`
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
+- **Descrição:** Desvincula um item de um evento específico.
+- **Parâmetros de Caminho:**
+  - `id`: ID do evento (number).
+  - `id_item`: ID do item a ser desvinculado (number).
+- **Respostas:**
+  - `200 OK`: Item desvinculado com sucesso.
+    ```json
+    {
+      "mensagem": "Item desvinculado do evento com sucesso!"
+    }
+    ```
+  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `403 Forbidden`: Usuário não autorizado.
+  - `404 Not Found`: Evento ou item não encontrado.
+  - `500 Internal Server Error`: Erro interno do servidor.
+
+### 9. Listar Quartos de um Evento
+
+- **Caminho:** `/api/eventos/:id/quartos`
+- **Método HTTP:** `GET`
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
+
+### 10. Adicionar Datas a um Evento
+
+- **Caminho:** `/api/eventos/:id/datas`
+- **Método HTTP:** `POST`
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
+- **Descrição:** Associa datas específicas ao evento.
+- **Corpo:**
+
+  ```json
+  {
+    "datas": ["2025-06-20", "2025-06-21"]
+  }
+  ```
+
+### 11. Listar Datas de um Evento
+
+- **Caminho:** `/api/eventos/:id/datas`
+- **Método HTTP:** `GET`
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
+
+
+
+### 8. Listar Eventos para Hóspede
+- **Caminho:** `/api/eventos/hospede`
+- **Método HTTP:** `GET`
+- **Autenticação:** Necessária (via `autenticador`)
+- **Descrição:** Lista os eventos disponíveis para o hóspede logado, considerando recorrência, datas específicas e quartos associados.
+- **Respostas:**
+  - `200 OK`: Lista de eventos retornada com sucesso.
+    ```json
+    [
+      { "id_evento": 1, "nome_evento": "Evento Recorrente", "desc_evento": "Descrição", "sts_evento": true, "recorrencia": true, "publico_alvo": true, "horarios": ["HH:MM"], "datas": [], "quartos": [] },
+      { "id_evento": 2, "nome_evento": "Evento do Quarto", "desc_evento": "Descrição", "sts_evento": true, "recorrencia": false, "publico_alvo": false, "horarios": ["HH:MM"], "datas": [], "quartos": ["num_quarto"] }
+    ]
+    ```
+  - `400 Bad Request`: Número do quarto do hóspede não encontrado no token.
+  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `404 Not Found`: Quarto do hóspede não encontrado.
+  - `500 Internal Server Error`: Erro interno do servidor.
+
+
+
+
+## Rotas de Pedidos (`/api/pedidos`)
+
+### 1. Criar Pedido
+- **Caminho:** `/api/pedidos`
+- **Método HTTP:** `POST`
+- **Autenticação:** Necessária (via `autenticador`)
+- **Validação:** `pedidoValidadorCriar`
+- **Descrição:** Cria um novo pedido no sistema.
+- **Corpo da Requisição (JSON):**
+  ```json
+  {
+    "id_quarto": "number",
+    "id_evento": "number" (opcional),
+    "itens": [
+      {
+        "id_item": "number",
+        "qntd_item": "number"
+      }
+    ]
+  }
+  ```
+- **Respostas:**
+  - `201 Created`: Pedido criado com sucesso.
+    ```json
+    {
+      "mensagem": "Pedido criado com sucesso!",
+      "data": { "id_pedido": "number" }
+    }
+    ```
+  - `400 Bad Request`: Erro de validação ou dados inválidos.
+  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `500 Internal Server Error`: Erro interno do servidor.
+
+### 2. Obter Pedido por ID
+- **Caminho:** `/api/pedidos/:idPedido`
+- **Método HTTP:** `GET`
+- **Autenticação:** Necessária (via `autenticador`)
+- **Descrição:** Obtém os detalhes de um pedido específico pelo seu ID.
+- **Parâmetros de Caminho:**
+  - `idPedido`: ID do pedido (number).
+- **Respostas:**
+  - `200 OK`: Pedido encontrado com sucesso.
+    ```json
+    {
+      "mensagem": "Pedido encontrado com sucesso!",
+      "data": {
+        "id_pedido": "number",
+        "evento": "string" (nome do evento, se houver),
+        "data_pedido": "YYYY-MM-DDTHH:MM:SS.sssZ",
+        "itens": [
+          {
+            "id_item": "number",
+            "nome": "string",
+            "quantidade": "number",
+            "valor_unitario": "number",
+            "valor_total": "number"
+          }
+        ]
+      }
+    }
+    ```
+  - `404 Not Found`: Pedido não encontrado.
+  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `500 Internal Server Error`: Erro interno do servidor.
+
+### 3. Atualizar Pedido
+- **Caminho:** `/api/pedidos/:idPedido`
+- **Método HTTP:** `PUT`
+- **Autenticação:** Necessária (via `autenticador`)
+- **Validação:** `pedidoValidadorAtualizar`
+- **Descrição:** Atualiza os itens de um pedido existente pelo seu ID.
+- **Parâmetros de Caminho:**
+  - `idPedido`: ID do pedido (number).
+- **Corpo da Requisição (JSON):**
+  ```json
+  {
+    "itens": [
+      {
+        "id_item": "number",
+        "qntd_item": "number"
+      }
+    ]
+  }
+  ```
+- **Respostas:**
+  - `200 OK`: Pedido atualizado com sucesso.
+    ```json
+    {
+      "mensagem": "Pedido atualizado com sucesso!"
+    }
+    ```
+  - `400 Bad Request`: Erro de validação ou dados inválidos.
+  - `404 Not Found`: Pedido não encontrado.
+  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `500 Internal Server Error`: Erro interno do servidor.
+
+### 4. Deletar Pedido
+- **Caminho:** `/api/pedidos/:idPedido`
+- **Método HTTP:** `DELETE`
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
+- **Descrição:** Deleta um pedido existente pelo seu ID.
+- **Parâmetros de Caminho:**
+  - `idPedido`: ID do pedido (number).
+- **Respostas:**
+  - `200 OK`: Pedido excluído com sucesso.
+    ```json
+    {
+      "mensagem": "Pedido excluído com sucesso!"
+    }
+    ```
+  - `404 Not Found`: Pedido não encontrado.
+  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `403 Forbidden`: Usuário não autorizado.
+  - `500 Internal Server Error`: Erro interno do servidor.
+
+### 5. Listar Pedidos por Quarto
+- **Caminho:** `/api/pedidos/quarto/:numQuarto`
+- **Método HTTP:** `GET`
+- **Autenticação:** Necessária (via `autenticador`)
+- **Descrição:** Lista todos os pedidos associados a um quarto específico.
+- **Parâmetros de Caminho:**
+  - `numQuarto`: Número do quarto (string).
+- **Respostas:**
+  - `200 OK`: Pedidos do quarto listados com sucesso.
+    ```json
+    {
+      "mensagem": "Pedidos do quarto listados com sucesso!",
+      "data": [
+        { "id_pedido": "number", "id_quarto": "number", "id_evento": "number" (ou null), "data_pedido": "YYYY-MM-DDTHH:MM:SS.sssZ", "Items": [...] },
+        ...
+      ]
+    }
+    ```
+  - `404 Not Found`: Quarto não encontrado.
+  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `500 Internal Server Error`: Erro interno do servidor.
+
+
+
+
+### 6. Listar Pedidos de Eventos Ativos
+- **Caminho:** `/api/pedidos/eventos/ativos`
+- **Método HTTP:** `GET`
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
+- **Descrição:** Lista todos os pedidos associados a eventos que estão ativos na data atual (recorrentes ou com data específica para hoje).
+- **Respostas:**
+  - `200 OK`: Pedidos de eventos ativos listados com sucesso.
+    ```json
+    [
+      {
+        "id_pedido": "number",
+        "data_pedido": "YYYY-MM-DDTHH:MM:SS.sssZ",
+        "quarto": "string" (número do quarto),
+        "evento": {
+          "id_evento": "number",
+          "nome_evento": "string",
+          "desc_evento": "string"
+        },
+        "itens": [
+          {
+            "id_item": "number",
+            "nome_item": "string",
+            "quantidade": "number",
+            "valor_unitario": "number",
+            "valor_total": "number"
+          }
+        ]
+      }
     ]
     ```
   - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `403 Forbidden`: Usuário não autorizado.
   - `500 Internal Server Error`: Erro interno do servidor.
+
+### 7. Relatório Geral de Evento
+- **Caminho:** `/api/pedidos/relatorio/:idEvento`
+- **Método HTTP:** `GET`
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
+- **Descrição:** Gera um relatório detalhado para um evento específico, incluindo resumo de pedidos, itens mais vendidos e pedidos detalhados.
+- **Parâmetros de Caminho:**
+  - `idEvento`: ID do evento (number).
+- **Respostas:**
+  - `200 OK`: Relatório gerado com sucesso.
+    ```json
+    {
+      "mensagem": "Relatório geral do evento gerado com sucesso!",
+      "data": {
+        "evento": {
+          "id_evento": "number",
+          "nome_evento": "string",
+          "desc_evento": "string"
+        },
+        "resumo": {
+          "total_pedidos": "number",
+          "total_quartos_participantes": "number",
+          "valor_total": "number"
+        },
+        "itens_mais_pedidos": [
+          {
+            "nome_item": "string",
+            "quantidade": "number",
+            "valor_unitario": "number",
+            "valor_total": "number"
+          }
+        ],
+        "pedidos_detalhados": [
+          {
+            "id_pedido": "number",
+            "data_pedido": "YYYY-MM-DDTHH:MM:SS.sssZ",
+            "quarto": "string" (número do quarto),
+            "itens": [
+              {
+                "nome_item": "string",
+                "quantidade": "number",
+                "valor_unitario": "number",
+                "valor_total": "number"
+              }
+            ]
+          }
+        ]
+      }
+    }
+    ```
+  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `403 Forbidden`: Usuário não autorizado.
+  - `404 Not Found`: Evento não encontrado.
+  - `500 Internal Server Error`: Erro interno do servidor.
+
+### 8. Histórico de Pedidos com Paginação
+- **Caminho:** `/api/pedidos/historico`
+- **Método HTTP:** `GET`
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
+- **Descrição:** Lista o histórico de todos os pedidos com suporte a paginação.
+- **Parâmetros de Query:**
+  - `page`: Número da página (padrão: 1).
+  - `limit`: Quantidade de registros por página (padrão: 50).
+- **Respostas:**
+  - `200 OK`: Histórico de pedidos listado com sucesso.
+    ```json
+    {
+      "mensagem": "Histórico de pedidos listado com sucesso!",
+      "data": {
+        "pedidos": [
+          {
+            "id_pedido": "number",
+            "data_pedido": "YYYY-MM-DDTHH:MM:SS.sssZ",
+            "quarto": "string" (número do quarto),
+            "evento": {
+              "nome_evento": "string",
+              "desc_evento": "string"
+            } (ou null),
+            "itens": [
+              {
+                "nome_item": "string",
+                "quantidade": "number",
+                "valor_unitario": "number",
+                "valor_total": "number"
+              }
+            ],
+            "valor_total_pedido": "number"
+          }
+        ],
+        "paginacao": {
+          "pagina_atual": "number",
+          "total_paginas": "number",
+          "total_registros": "number",
+          "registros_por_pagina": "number"
+        }
+      }
+    }
+    ```
+  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `403 Forbidden`: Usuário não autorizado.
+  - `500 Internal Server Error`: Erro interno do servidor.
+
+
+
+
+
+
