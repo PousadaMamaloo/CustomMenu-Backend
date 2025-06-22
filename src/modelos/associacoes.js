@@ -60,3 +60,6 @@ Evento.hasMany(EventoData, {
 EventoData.belongsTo(Evento, {
   foreignKey: 'id_evento'
 });
+Pedido.belongsTo(Quarto, {
+  foreignKey: 'id_quarto'
+});
