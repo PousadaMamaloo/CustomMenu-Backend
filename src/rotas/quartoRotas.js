@@ -18,7 +18,6 @@ router.use(autenticador);
 router.post('/criar', autorizaAdministrador, quartoValidador, criarQuarto);
 router.put('/:num', autorizaAdministrador, atualizarQuarto);
 router.delete('/:num', autorizaAdministrador, deletarQuarto);
-
 router.get('/listar', autorizaAdministrador, listarQuartos);
 router.get('/buscar/:num', autorizaAdministrador, buscarQuarto);
 

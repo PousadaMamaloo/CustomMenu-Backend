@@ -18,17 +18,11 @@ const router = express.Router();
 router.use(autenticador);
 
 router.get('/', listarEventos);
-
 router.get('/:id/itens', autorizaAdministrador, listarItensPorEvento);
-
 router.post('/:id/itens', autorizaAdministrador, vincularItensEvento);
-
 router.delete('/:id/itens/:id_item', autorizaAdministrador, desvincularItemEvento);
-
 router.post('/', autorizaAdministrador, eventoValidador, criarEvento);
-
 router.put('/:id', autorizaAdministrador, eventoValidador, atualizarEvento);
-
 router.delete('/:id', autorizaAdministrador, excluirEvento);
 
 export default router;
