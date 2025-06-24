@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import Quarto from "../modelos/quarto.js";
 import Hospede from "../modelos/hospede.js";
-import respostaHelper from "../utilitarios/helpers/respostaHelper.js";
+import { respostaHelper } from "../utilitarios/helpers/respostaHelper.js";
 import tokenBlacklist from "../utilitarios/autenticacao/tokenBlacklist.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || "seu-segredo-jwt";

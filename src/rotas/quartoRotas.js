@@ -19,8 +19,8 @@ router.post('/criar', autorizaAdministrador, quartoValidador, criarQuarto);
 router.put('/:num', autorizaAdministrador, atualizarQuarto);
 router.delete('/:num', autorizaAdministrador, deletarQuarto);
 
-router.get('/listar', listarQuartos);
-router.get('/buscar/:num', buscarQuarto);
+router.get('/listar', autorizaAdministrador, listarQuartos);
+router.get('/buscar/:num', autorizaAdministrador, buscarQuarto);
 
 export default router;
 

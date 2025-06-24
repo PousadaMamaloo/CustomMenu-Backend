@@ -17,7 +17,7 @@ const router = express.Router();
 
 router.use(autenticador);
 
-router.get('/historico', autorizaAdministrador, historicoComPaginacao);
+router.get('/historico/hist', autorizaAdministrador, historicoComPaginacao);
 
 router.get('/eventos/ativos', autorizaAdministrador, listarPedidosEventosAtivos);
 
