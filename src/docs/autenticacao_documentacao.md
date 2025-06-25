@@ -16,7 +16,12 @@
   - `200 OK`: Login bem-sucedido.
     ```json
     {
-      "token": "string"
+      "mensagem": "Login realizado com sucesso.",
+      "data": {
+        "nome_hospede_principal": "Nome do Hóspede",
+        "id_quarto": 123,
+        "num_quarto": "101"
+      }
     }
     ```
   - `400 Bad Request`: Credenciais inválidas.

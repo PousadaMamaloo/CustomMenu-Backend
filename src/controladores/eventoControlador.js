@@ -516,3 +516,57 @@ export const listarEventosHospede = async (req, res) => {
 };
 
 
+
+
+export const listarEventoPorId = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const [result] = await sequelize.query(`
+            SELECT 
+                e.id_evento, 
+                e.nome_evento, 
+                e.desc_evento, 
+                e.sts_evento,
+                e.recorrencia,
+                e.publico_alvo,
+                array_remove(array_agg(DISTINCT h.horario::text), NULL) AS horarios,
+                array_remove(array_agg(DISTINCT to_char(red.data_evento, 'YYYY-MM-DD')), NULL) AS datas,
+                array_remove(array_agg(DISTINCT q.num_quarto), NULL) AS quartos,
+                array_remove(array_agg(DISTINCT i.nome_item), NULL) AS itens
+            FROM mamaloo.tab_evento e
+            LEFT JOIN mamaloo.tab_re_evento_horario reh ON reh.id_evento = e.id_evento
+            LEFT JOIN mamaloo.tab_horario h ON h.id_horario = reh.id_horario
+            LEFT JOIN mamaloo.tab_re_evento_data red ON red.id_evento = e.id_evento
+            LEFT JOIN mamaloo.tab_re_evento_quarto req ON req.id_evento = e.id_evento
+            LEFT JOIN mamaloo.tab_quarto q ON q.id_quarto = req.id_quarto
+            LEFT JOIN mamaloo.tab_re_evento_item rei ON rei.id_evento = e.id_evento
+            LEFT JOIN mamaloo.tab_item i ON i.id_item = rei.id_item
+            WHERE e.id_evento = :id_evento
+            GROUP BY e.id_evento, e.nome_evento, e.desc_evento, e.sts_evento, e.recorrencia, e.publico_alvo;
+        `, {
+            replacements: { id_evento: id }
+        });
+
+        if (result.length === 0) {
+            return res.status(404).json(respostaHelper({
+                status: 404,
+                mensagem: 'Evento não encontrado.'
+            }));
+        }
+
+        return res.status(200).json(respostaHelper({
+            status: 200,
+            mensagem: 'Evento encontrado.',
+            data: result[0]
+        }));
+    } catch (err) {
+        console.error(`Erro ao buscar evento ${id}:`, err);
+        return res.status(500).json(respostaHelper({
+            status: 500,
+            mensagem: 'Erro ao buscar evento.',
+            errors: [err.message]
+        }));
+    }
+};
+
+

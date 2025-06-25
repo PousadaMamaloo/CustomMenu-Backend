@@ -214,5 +214,32 @@
   - `500 Internal Server Error`: Erro interno do servidor.
 
 
+### 8. Obter Evento por ID
+- **Caminho:** `/api/eventos/:id`
+- **Método HTTP:** `GET`
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
+- **Descrição:** Retorna todos os dados de um evento específico, incluindo itens, horários, datas e quartos.
+- **Parâmetros de Caminho:**
+  - `id`: ID do evento (number).
+- **Respostas:**
+  - `200 OK`: Dados completos do evento retornados com sucesso.
+    ```json
+    {
+      "id_evento": 1,
+      "nome_evento": "Nome do Evento",
+      "desc_evento": "Descrição do Evento",
+      "sts_evento": true,
+      "recorrencia": false,
+      "publico_alvo": false,
+      "horarios": ["10:00", "14:00"],
+      "datas": ["2025-07-01", "2025-07-02"],
+      "quartos": [101, 102],
+      "itens": ["Item A", "Item B"]
+    }
+    ```
+  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `403 Forbidden`: Usuário não autorizado.
+  - `404 Not Found`: Evento não encontrado.
+  - `500 Internal Server Error`: Erro interno do servidor.
 
 
