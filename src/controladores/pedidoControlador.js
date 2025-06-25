@@ -429,16 +429,7 @@ export const historicoComPaginacao = async (req, res) => {
       evento: pedido.Evento ? {
         nome_evento: pedido.Evento.nome_evento,
         desc_evento: pedido.Evento.desc_evento
-      } : null,
-      itens: pedido.Items.map(item => ({
-        nome_item: item.nome_item,
-        quantidade: item.itemPedido.qntd_item,
-        valor_unitario: item.valor_item,
-        valor_total: item.valor_item * item.itemPedido.qntd_item,
-        foto_item: item.foto_item
-      })),
-      valor_total_pedido: pedido.Items.reduce((total, item) => 
-        total + (item.valor_item * item.itemPedido.qntd_item), 0)
+      } : null
     }));
 
     return res.status(200).json(respostaHelper({
