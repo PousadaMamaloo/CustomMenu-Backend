@@ -19,7 +19,7 @@ const Pedido = sequelize.define('Pedido', {
         defaultValue: DataTypes.NOW
     },
     horario_cafe_manha: {
-        type: DataTypes.STRING,
+        type: DataTypes.TIME,
         allowNull: true
     },
 }, {
