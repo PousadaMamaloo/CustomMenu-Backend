@@ -23,7 +23,7 @@ export const listarEventos = async (req, res) => {
           -- Agrupa datas específicas
           array_remove(array_agg(DISTINCT to_char(red.data_evento, 'YYYY-MM-DD')), NULL) AS datas,
           -- Agrupa quartos
-          array_remove(array_agg(DISTINCT q.numero_quarto), NULL) AS quartos
+          array_remove(array_agg(DISTINCT q.num_quarto), NULL) AS quartos
         FROM mamaloo.tab_evento e
         -- LEFT JOINs
         LEFT JOIN mamaloo.tab_re_evento_horario reh ON reh.id_evento = e.id_evento
@@ -477,7 +477,7 @@ export const listarEventosHospede = async (req, res) => {
                 e.publico_alvo,
                 array_remove(array_agg(DISTINCT h.horario::text), NULL) AS horarios,
                 array_remove(array_agg(DISTINCT to_char(red.data_evento, 'YYYY-MM-DD')), NULL) AS datas,
-                array_remove(array_agg(DISTINCT q.numero_quarto), NULL) AS quartos
+                array_remove(array_agg(DISTINCT q.num_quarto), NULL) AS quartos
             FROM mamaloo.tab_evento e
             LEFT JOIN mamaloo.tab_re_evento_horario reh ON reh.id_evento = e.id_evento
             LEFT JOIN mamaloo.tab_horario h ON h.id_horario = reh.id_horario
