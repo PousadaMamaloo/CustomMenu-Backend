@@ -1,7 +1,7 @@
 ## Rotas de Autenticação (`/api/autenticacao`)
 
 ### 1. Login Hóspede
-- **Caminho:** `/api/autenticacao/login`
+- **Caminho:** `/api/auth/login`
 - **Método HTTP:** `POST`
 - **Autenticação:** Nenhuma
 - **Descrição:** Realiza o login de um hóspede e retorna um token de autenticação.
@@ -23,7 +23,7 @@
   - `500 Internal Server Error`: Erro interno do servidor.
 
 ### 2. Logout
-- **Caminho:** `/api/autenticacao/logout`
+- **Caminho:** `/api/auth/logout`
 - **Método HTTP:** `POST`
 - **Autenticação:** Necessária (via `autenticador`)
 - **Descrição:** Invalida o token JWT do usuário, realizando o logout.
@@ -34,7 +34,7 @@
   - `500 Internal Server Error`: Erro interno do servidor.
 
 ### 3. Validar Token JWT
-- **Caminho:** `/api/autenticacao/validar-token`
+- **Caminho:** `/api/auth/validar_token`
 - **Método HTTP:** `GET`
 - **Autenticação:** Necessária (via `autenticador`)
 - **Descrição:** Verifica se o token JWT fornecido na requisição é válido e não está na blacklist.

@@ -4,14 +4,10 @@ import autenticador from "../utilitarios/autenticacao/autenticador.js";
 
 const router = express.Router();
 
-// Rota de login (não requer autenticação)
+
 router.post("/login", loginHospede);
-
-// Rota de logout (requer autenticação)
 router.post("/logout", autenticador, logout);
-
-// Rota para validar token (requer autenticação)
-router.get("/validar-token", autenticador, validarToken);
+router.get("/validar_token", autenticador, validarToken);
 
 export default router;
 

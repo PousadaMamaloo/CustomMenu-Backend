@@ -6,7 +6,7 @@ import Quarto from '../modelos/quarto.js';
 import EventoData from '../modelos/eventoData.js';
 import { respostaHelper } from '../utilitarios/helpers/respostaHelper.js';
 import { validationResult } from 'express-validator';
-
+import { Op } from 'sequelize'
 
 export const criarPedido = async (req, res) => {
   const erros = validationResult(req);
@@ -462,9 +462,14 @@ export const listarPedidosHoje = async (req, res) => {
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
 
+    const amanha = new Date(hoje);
+    amanha.setDate(hoje.getDate() + 1);
+
     const pedidos = await Pedido.findAll({
       where: {
-        data_pedido: hoje
+        data_pedido: {
+          [Op.or]: [hoje, amanha]
+        }
       },
       include: [
         {

@@ -42,7 +42,7 @@ app.use('/api/eventos', eventoRotas);
 app.use('/api/eventoItem', eventoItemRotas);
 app.use('/api/pedidos', pedidoRotas);
 app.use("/admin/relatorios", relatorioRotas);
-app.use("/api/autenticacao", autenticacaoRotas);
+app.use("/api/auth", autenticacaoRotas);
 
 (async () => {
   try {
