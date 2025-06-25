@@ -972,3 +972,11 @@ Esta documentação detalha os endpoints da API CustomMenu-Backend, incluindo m�
 
 
 
+
+
+
+## Rotas de Autenticação (`/api/autenticacao`)
+
+Consulte a documentação detalhada em [autenticacao_documentacao.md](autenticacao_documentacao.md).
+
+

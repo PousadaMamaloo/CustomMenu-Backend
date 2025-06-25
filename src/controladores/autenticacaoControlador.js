@@ -1,12 +1,12 @@
-import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
-import Quarto from "../modelos/quarto.js";
-import Hospede from "../modelos/hospede.js";
-import { respostaHelper } from "../utilitarios/helpers/respostaHelper.js";
-import tokenBlacklist from "../utilitarios/autenticacao/tokenBlacklist.js";
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import Quarto from '../modelos/quarto.js';
+import Hospede from '../modelos/hospede.js';
+import { respostaHelper } from '../utilitarios/helpers/respostaHelper.js';
+import tokenBlacklist from '../utilitarios/autenticacao/tokenBlacklist.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || "seu-segredo-jwt";
-const JWT_EXPIRES_IN = "1d";
+const JWT_SECRET = process.env.JWT_SECRET || 'seu-segredo-jwt';
+const JWT_EXPIRES_IN = '1d';
 
 export const loginHospede = async (req, res) => {
   const { num_quarto, telef_hospede } = req.body;
@@ -17,7 +17,7 @@ export const loginHospede = async (req, res) => {
     if (!quarto || !quarto.id_hospede_responsavel) {
       return res.status(404).json(respostaHelper({
         status: 404,
-        message: "Quarto não encontrado ou sem hóspede responsável."
+        message: 'Quarto não encontrado ou sem hóspede responsável.'
       }));
     }
 
@@ -28,7 +28,7 @@ export const loginHospede = async (req, res) => {
     if (!hospede) {
       return res.status(404).json(respostaHelper({
         status: 404,
-        message: "Hóspede responsável não encontrado."
+        message: 'Hóspede responsável não encontrado.'
       }));
     }
 
@@ -37,7 +37,7 @@ export const loginHospede = async (req, res) => {
     if (!senhaValida) {
       return res.status(401).json(respostaHelper({
         status: 401,
-        message: "Telefone incorreto."
+        message: 'Telefone incorreto.'
       }));
     }
 
@@ -45,27 +45,27 @@ export const loginHospede = async (req, res) => {
       id_hospede: hospede.id_hospede,
       nome: hospede.nome_hospede,
       num_quarto,
-      role: "hospede"
+      role: 'hospede'
     };
 
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 
-    res.cookie("token", token, {
+    res.cookie('token', token, {
       httpOnly: true,
       secure: false,
-      sameSite: "lax",
+      sameSite: 'lax',
       maxAge: 24 * 60 * 60 * 1000
     });
 
     return res.status(200).json(respostaHelper({
       status: 200,
-      message: "Login realizado com sucesso."
+      message: 'Login realizado com sucesso.'
     }));
 
   } catch (err) {
     return res.status(500).json(respostaHelper({
       status: 500,
-      message: "Erro interno ao realizar login.",
+      message: 'Erro interno ao realizar login.',
       errors: [err.message]
     }));
   }
@@ -73,47 +73,70 @@ export const loginHospede = async (req, res) => {
 
 export const logout = async (req, res) => {
   try {
+  
     const token =
       (req.cookies && req.cookies.token) ||
-      (req.headers["authorization"]?.startsWith("Bearer ")
-        ? req.headers["authorization"].slice(7)
-        : req.headers["authorization"]);
+      (req.headers['authorization']?.startsWith('Bearer ')
+        ? req.headers['authorization'].slice(7)
+        : req.headers['authorization']);
 
     if (!token) {
       return res.status(400).json(respostaHelper({
         status: 400,
-        message: "Token não fornecido para logout."
+        message: 'Token não fornecido para logout.'
       }));
     }
 
+    
     const decoded = jwt.decode(token);
     
     if (!decoded || !decoded.exp) {
       return res.status(400).json(respostaHelper({
         status: 400,
-        message: "Token inválido para logout."
+        message: 'Token inválido para logout.'
       }));
     }
 
+    
     tokenBlacklist.addToken(token, decoded.exp);
 
-    res.clearCookie("token", {
+    
+    res.clearCookie('token', {
       httpOnly: true,
       secure: false,
-      sameSite: "lax"
+      sameSite: 'lax'
     });
 
     return res.status(200).json(respostaHelper({
       status: 200,
-      message: "Logout realizado com sucesso."
+      message: 'Logout realizado com sucesso.'
     }));
 
   } catch (err) {
     return res.status(500).json(respostaHelper({
       status: 500,
-      message: "Erro interno ao realizar logout.",
+      message: 'Erro interno ao realizar logout.',
       errors: [err.message]
     }));
   }
 };
+
+
+export const validarToken = async (req, res) => {
+  try {
+    
+    return res.status(200).json(respostaHelper({
+      status: 200,
+      message: "Token JWT válido.",
+      data: { usuario: req.user }
+    }));
+  } catch (error) {
+    return res.status(500).json(respostaHelper({
+      status: 500,
+      message: "Erro ao validar token.",
+      errors: [error.message]
+    }));
+  }
+};
+
 

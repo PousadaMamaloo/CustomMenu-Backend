@@ -11,7 +11,7 @@
   {
     "id_quarto": "number",
     "id_evento": "number",
-    "horario_cafe_manha": "HH:MM" 
+    "horario_cafe_manha": "HH:MM", 
     "itens": [
       {
         "id_item": "number",
@@ -266,6 +266,37 @@
           "registros_por_pagina": "number"
         }
       }
+    }
+    ```
+  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `403 Forbidden`: Usuário não autorizado.
+  - `500 Internal Server Error`: Erro interno do servidor.
+
+
+
+
+### 9. Listar Pedidos de Hoje
+- **Caminho:** `/api/pedidos/hoje`
+- **Método HTTP:** `GET`
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
+- **Descrição:** Lista todos os pedidos realizados na data atual.
+- **Respostas:**
+  - `200 OK`: Pedidos de hoje listados com sucesso.
+    ```json
+    {
+      "mensagem": "Pedidos de hoje listados com sucesso!",
+      "data": [
+        {
+          "id_pedido": "number",
+          "data_pedido": "YYYY-MM-DDTHH:MM:SS.sssZ",
+          "quarto": "string" (número do quarto),
+          "horario_cafe_manha": "string" (formato HH:MM, ou null),
+          "evento": {
+            "nome_evento": "string",
+            "desc_evento": "string"
+          } (ou null)
+        }
+      ]
     }
     ```
   - `401 Unauthorized`: Token de autenticação ausente ou inválido.

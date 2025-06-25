@@ -10,7 +10,6 @@ export const gerarRelatorioPorEvento = async (req, res) => {
     const { idEvento } = req.params;
 
     try {
-        // Verificar se o evento existe
         const evento = await Evento.findByPk(idEvento);
         if (!evento) {
             return res.status(404).json(respostaHelper({
@@ -19,7 +18,6 @@ export const gerarRelatorioPorEvento = async (req, res) => {
             }));
         }
 
-        // Query SQL com JOIN e GROUP BY para consolidar os dados por item
         const query = `
             SELECT 
                 i.nome_item AS item,
@@ -43,7 +41,7 @@ export const gerarRelatorioPorEvento = async (req, res) => {
             type: QueryTypes.SELECT
         });
 
-        // Formatar a resposta conforme o padrão solicitado
+        
         const relatorio = {
             evento: evento.nome_evento,
             dados: resultado.map(item => ({
