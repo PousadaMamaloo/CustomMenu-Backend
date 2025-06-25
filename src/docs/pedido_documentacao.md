@@ -53,7 +53,8 @@
             "nome": "string",
             "quantidade": "number",
             "valor_unitario": "number",
-            "valor_total": "number"
+            "valor_total": "number",
+            "foto_item": "string" (imagem em base64 no formato data URI)
           }
         ]
       }
@@ -162,7 +163,8 @@
             "nome_item": "string",
             "quantidade": "number",
             "valor_unitario": "number",
-            "valor_total": "number"
+            "valor_total": "number",
+            "foto_item": "string" (imagem em base64 no formato data URI)
           }
         ]
       }
@@ -213,7 +215,8 @@
                 "nome_item": "string",
                 "quantidade": "number",
                 "valor_unitario": "number",
-                "valor_total": "number"
+                "valor_total": "number",
+                "foto_item": "string" (imagem em base64 no formato data URI)
               }
             ]
           }
@@ -254,7 +257,8 @@
                 "nome_item": "string",
                 "quantidade": "number",
                 "valor_unitario": "number",
-                "valor_total": "number"
+                "valor_total": "number",
+                "foto_item": "string" (imagem em base64 no formato data URI)
               }
             ],
             "valor_total_pedido": "number"

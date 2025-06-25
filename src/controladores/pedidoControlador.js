@@ -74,7 +74,8 @@ export const obterPedido = async (req, res) => {
       nome: it.nome_item,
       quantidade: it.itemPedido.qntd_item,
       valor_unitario: it.valor_item,
-      valor_total: it.valor_item * it.itemPedido.qntd_item
+      valor_total: it.valor_item * it.itemPedido.qntd_item,
+      foto_item: it.foto_item
     }));
 
     return res.status(200).json(respostaHelper({
@@ -273,7 +274,8 @@ export const listarPedidosEventosAtivos = async (req, res) => {
             nome_item: item.nome_item,
             quantidade: item.itemPedido.qntd_item,
             valor_unitario: item.valor_item,
-            valor_total: item.valor_item * item.itemPedido.qntd_item
+            valor_total: item.valor_item * item.itemPedido.qntd_item,
+            foto_item: item.foto_item
           }))
         });
       }
@@ -370,7 +372,8 @@ export const relatorioGeralEvento = async (req, res) => {
           nome_item: item.nome_item,
           quantidade: item.itemPedido.qntd_item,
           valor_unitario: item.valor_item,
-          valor_total: item.valor_item * item.itemPedido.qntd_item
+          valor_total: item.valor_item * item.itemPedido.qntd_item,
+          foto_item: item.foto_item
         }))
       }))
     };
@@ -431,7 +434,8 @@ export const historicoComPaginacao = async (req, res) => {
         nome_item: item.nome_item,
         quantidade: item.itemPedido.qntd_item,
         valor_unitario: item.valor_item,
-        valor_total: item.valor_item * item.itemPedido.qntd_item
+        valor_total: item.valor_item * item.itemPedido.qntd_item,
+        foto_item: item.foto_item
       })),
       valor_total_pedido: pedido.Items.reduce((total, item) => 
         total + (item.valor_item * item.itemPedido.qntd_item), 0)
