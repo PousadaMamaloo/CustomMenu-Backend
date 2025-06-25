@@ -18,6 +18,10 @@ const Pedido = sequelize.define('Pedido', {
         type: DataTypes.DATEONLY,
         defaultValue: DataTypes.NOW
     },
+    horario_cafe_manha: {
+        type: DataTypes.TIME,
+        allowNull: true
+    },
 }, {
     tableName: 'tab_pedido',
     schema: 'mamaloo',

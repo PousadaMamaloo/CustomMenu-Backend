@@ -10,7 +10,8 @@
   ```json
   {
     "id_quarto": "number",
-    "id_evento": "number" (opcional),
+    "id_evento": "number",
+    "horario_cafe_manha": "HH:MM" 
     "itens": [
       {
         "id_item": "number",
@@ -47,6 +48,7 @@
         "id_pedido": "number",
         "evento": "string" (nome do evento, se houver),
         "data_pedido": "YYYY-MM-DDTHH:MM:SS.sssZ",
+        "horario_cafe_manha": "string" (formato HH:MM, ou null),
         "itens": [
           {
             "id_item": "number",
@@ -151,6 +153,7 @@
       {
         "id_pedido": "number",
         "data_pedido": "YYYY-MM-DDTHH:MM:SS.sssZ",
+        "horario_cafe_manha": "string" (formato HH:MM, ou null),
         "quarto": "string" (número do quarto),
         "evento": {
           "id_evento": "number",
@@ -210,6 +213,7 @@
             "id_pedido": "number",
             "data_pedido": "YYYY-MM-DDTHH:MM:SS.sssZ",
             "quarto": "string" (número do quarto),
+            "horario_cafe_manha": "string" (formato HH:MM, ou null),
             "itens": [
               {
                 "nome_item": "string",
@@ -248,20 +252,11 @@
             "id_pedido": "number",
             "data_pedido": "YYYY-MM-DDTHH:MM:SS.sssZ",
             "quarto": "string" (número do quarto),
+            "horario_cafe_manha": "string" (formato HH:MM, ou null),
             "evento": {
               "nome_evento": "string",
               "desc_evento": "string"
-            } (ou null),
-            "itens": [
-              {
-                "nome_item": "string",
-                "quantidade": "number",
-                "valor_unitario": "number",
-                "valor_total": "number",
-                "foto_item": "string" (imagem em base64 no formato data URI)
-              }
-            ],
-            "valor_total_pedido": "number"
+            } (ou null)
           }
         ],
         "paginacao": {
