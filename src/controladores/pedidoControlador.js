@@ -17,10 +17,10 @@ export const criarPedido = async (req, res) => {
       errors: erros.array()
     }));
   }
-  const { id_quarto, id_evento, itens } = req.body;
+  const { id_quarto, id_evento, itens, horario_cafe_manha } = req.body;
   try {
     const agora = new Date();
-    const novoPedido = await Pedido.create({ id_quarto, id_evento, data_pedido: agora });
+    const novoPedido = await Pedido.create({ id_quarto, id_evento, data_pedido: agora, horario_cafe_manha });
 
     // Relaciona itens ao pedido
     for (const it of itens) {
@@ -84,6 +84,7 @@ export const obterPedido = async (req, res) => {
         id_pedido: pedido.id_pedido,
         evento: pedido.Evento ? pedido.Evento.nome_evento : null,
         data_pedido: pedido.data_pedido,
+        horario_cafe_manha: pedido.horario_cafe_manha,
         itens
       },
       message: 'Pedido encontrado com sucesso.'
@@ -263,6 +264,7 @@ export const listarPedidosEventosAtivos = async (req, res) => {
         pedidosFiltrados.push({
           id_pedido: pedido.id_pedido,
           data_pedido: pedido.data_pedido,
+          horario_cafe_manha: pedido.horario_cafe_manha,
           quarto: pedido.Quarto.num_quarto,
           evento: {
             id_evento: evento.id_evento,
@@ -368,6 +370,7 @@ export const relatorioGeralEvento = async (req, res) => {
         id_pedido: pedido.id_pedido,
         data_pedido: pedido.data_pedido,
         quarto: pedido.Quarto.num_quarto,
+        horario_cafe_manha: pedido.horario_cafe_manha,
         itens: pedido.Items.map(item => ({
           nome_item: item.nome_item,
           quantidade: item.itemPedido.qntd_item,
@@ -426,6 +429,7 @@ export const historicoComPaginacao = async (req, res) => {
       id_pedido: pedido.id_pedido,
       data_pedido: pedido.data_pedido,
       quarto: pedido.Quarto.num_quarto,
+      horario_cafe_manha: pedido.horario_cafe_manha,
       evento: pedido.Evento ? {
         nome_evento: pedido.Evento.nome_evento,
         desc_evento: pedido.Evento.desc_evento
