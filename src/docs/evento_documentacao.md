@@ -242,4 +242,61 @@
   - `404 Not Found`: Evento não encontrado.
   - `500 Internal Server Error`: Erro interno do servidor.
 
+  ### 9. Relatório de Itens dos Eventos de Hoje
+- **Caminho:** `/api/eventos/hoje`
+- **Método HTTP:** `GET`
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
+- **Descrição:** Gera um relatório dos itens relacionados aos eventos do dia atual. Considera eventos com data igual à data de hoje em `tab_re_evento_data` ou eventos marcados como recorrentes. Para cada evento, retorna os itens, foto, quantidade total, preço unitário e valor total.
+
+- **Respostas:**
+  - `200 OK`: Relatório de itens dos eventos do dia gerado com sucesso.
+    ```json
+    {
+      "mensagem": "Relatório de itens dos eventos de hoje gerado com sucesso.",
+      "data": [
+        {
+          "id_evento": 1,
+          "nome_evento": "Café da Manhã",
+          "itens": [
+            {
+              "id_item": 10,
+              "nome_item": "Suco de Laranja",
+              "foto_item": "https://.../suco-laranja.jpg",
+              "preco_unitario": 5,
+              "quantidade_total": 5,
+              "valor_total": 25
+            },
+            {
+              "id_item": 12,
+              "nome_item": "Pão de Queijo",
+              "foto_item": "https://.../pao-queijo.jpg",
+              "preco_unitario": 2,
+              "quantidade_total": 10,
+              "valor_total": 20
+            }
+          ]
+        }
+      ]
+    }
+    ```
+  - `404 Not Found`: Nenhum evento encontrado para hoje.
+    ```json
+    {
+      "mensagem": "Nenhum evento encontrado para hoje.",
+      "data": []
+    }
+    ```
+  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `403 Forbidden`: Usuário não autorizado.
+  - `500 Internal Server Error`: Erro interno do servidor.
+    ```json
+    {
+      "mensagem": "Erro ao gerar relatório de itens dos eventos de hoje.",
+      "erros": [
+        "Detalhes do erro"
+      ]
+    }
+    ```
+
+
 
