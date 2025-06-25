@@ -7,7 +7,8 @@ import {
   listarItensPorEvento,
   vincularItensEvento,
   desvincularItemEvento,
-  listarEventosHospede
+  listarEventosHospede,
+  listarEventoPorId
 } from '../controladores/eventoControlador.js';
 import { eventoValidador } from '../utilitarios/validadores/eventoValidador.js';
 import autorizaAdministrador from '../utilitarios/autenticacao/autorizaAdministrador.js';
@@ -30,4 +31,7 @@ export default router;
 
 router.get("/hospede", listarEventosHospede);
 
+
+
+router.get("/:id", autorizaAdministrador, listarEventoPorId);
 
