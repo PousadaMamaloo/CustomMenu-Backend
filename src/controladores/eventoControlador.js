@@ -113,7 +113,6 @@ export const vincularItensEvento = async (req, res) => {
     const t = await sequelize.transaction();
 
     try {
-        // Verificar se o evento existe
         const evento = await Evento.findByPk(id, { transaction: t });
         if (!evento) {
             await t.rollback();
@@ -123,7 +122,6 @@ export const vincularItensEvento = async (req, res) => {
             }));
         }
 
-        // Verificar se todos os itens existem
         const itensExistentes = await Item.findAll({
             where: {
                 id_item: itens
@@ -139,7 +137,6 @@ export const vincularItensEvento = async (req, res) => {
             }));
         }
 
-        // Obter itens já associados para evitar duplicidade
         const itensAssociados = await evento.getItens({
             where: {
                 id_item: itens
@@ -151,7 +148,6 @@ export const vincularItensEvento = async (req, res) => {
         const itensParaAdicionar = itens.filter(id => !itensJaAssociados.includes(id));
 
         if (itensParaAdicionar.length > 0) {
-            // Usar o método addItem do Sequelize para associar os itens
             await evento.addItens(itensParaAdicionar, { 
                 through: { disp_item: true },
                 transaction: t 
@@ -185,7 +181,6 @@ export const desvincularItemEvento = async (req, res) => {
     const t = await sequelize.transaction();
 
     try {
-        // Verificar se o evento existe
         const evento = await Evento.findByPk(id, { transaction: t });
         if (!evento) {
             await t.rollback();
@@ -195,7 +190,6 @@ export const desvincularItemEvento = async (req, res) => {
             }));
         }
 
-        // Verificar se o item existe
         const item = await Item.findByPk(id_item, { transaction: t });
         if (!item) {
             await t.rollback();
@@ -205,7 +199,6 @@ export const desvincularItemEvento = async (req, res) => {
             }));
         }
 
-        // Verificar se a associação existe
         const associacao = await evento.hasItem(item, { transaction: t });
         if (!associacao) {
             await t.rollback();
@@ -215,7 +208,6 @@ export const desvincularItemEvento = async (req, res) => {
             }));
         }
 
-        // Usar o método removeItem do Sequelize para remover a associação
         await evento.removeItem(item, { transaction: t });
 
         await t.commit();
@@ -350,7 +342,6 @@ export const atualizarEvento = async (req, res) => {
             recorrencia, publico_alvo
         }, { transaction: t });
 
-        // Remover e reinserir horários
         await sequelize.query(
             `DELETE FROM mamaloo.tab_re_evento_horario WHERE id_evento = :id_evento`,
             { replacements: { id_evento: id }, transaction: t }
@@ -375,7 +366,6 @@ export const atualizarEvento = async (req, res) => {
             }
         }
 
-        // Atualizar datas (se não for recorrente)
         await EventoData.destroy({ where: { id_evento: id }, transaction: t });
         if (!recorrencia && datas?.length) {
             for (const data of datas) {
@@ -386,7 +376,6 @@ export const atualizarEvento = async (req, res) => {
             }
         }
 
-        // Atualizar quartos (se não for público geral)
         await EventoQuarto.destroy({ where: { id_evento: id }, transaction: t });
         if (!publico_alvo && quartos?.length) {
             for (const id_quarto of quartos) {
@@ -459,7 +448,7 @@ export const excluirEvento = async (req, res) => {
 
 export const listarEventosHospede = async (req, res) => {
     try {
-        const { id_hospede, num_quarto } = req.user; // Assumindo que o id_hospede e num_quarto estão no token
+        const { id_hospede, num_quarto } = req.user; 
 
         if (!num_quarto) {
             return res.status(400).json(respostaHelper({
@@ -477,8 +466,7 @@ export const listarEventosHospede = async (req, res) => {
         }
 
         const hoje = new Date();
-        hoje.setHours(0, 0, 0, 0); // Normaliza para o início do dia
-
+        hoje.setHours(0, 0, 0, 0); 
         const [eventos] = await sequelize.query(`
             SELECT 
                 e.id_evento, 
@@ -506,7 +494,7 @@ export const listarEventosHospede = async (req, res) => {
             ORDER BY e.id_evento;
         `, {
             replacements: {
-                hoje: hoje.toISOString().split('T')[0], // Formata para YYYY-MM-DD
+                hoje: hoje.toISOString().split('T')[0], 
                 id_quarto: quarto.id_quarto
             }
         });

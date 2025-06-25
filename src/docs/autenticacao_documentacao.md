@@ -1,10 +1,10 @@
-## Rotas de Autenticação (`/api/auth`)
+## Rotas de Autenticação (`/api/autenticacao`)
 
-### 1. Login de Hóspede
-- **Caminho:** `/api/auth/login`
+### 1. Login Hóspede
+- **Caminho:** `/api/autenticacao/login`
 - **Método HTTP:** `POST`
-- **Autenticação:** Não necessária
-- **Descrição:** Realiza o login de um hóspede no sistema usando número do quarto e telefone.
+- **Autenticação:** Nenhuma
+- **Descrição:** Realiza o login de um hóspede e retorna um token de autenticação.
 - **Corpo da Requisição (JSON):**
   ```json
   {
@@ -13,38 +13,47 @@
   }
   ```
 - **Respostas:**
-  - `200 OK`: Login realizado com sucesso.
+  - `200 OK`: Login bem-sucedido.
     ```json
     {
-      "status": 200,
-      "message": "Login realizado com sucesso."
+      "token": "string"
     }
     ```
-  - `401 Unauthorized`: Telefone incorreto.
-  - `404 Not Found`: Quarto não encontrado ou sem hóspede responsável.
+  - `400 Bad Request`: Credenciais inválidas.
   - `500 Internal Server Error`: Erro interno do servidor.
 
 ### 2. Logout
-- **Caminho:** `/api/auth/logout`
+- **Caminho:** `/api/autenticacao/logout`
 - **Método HTTP:** `POST`
 - **Autenticação:** Necessária (via `autenticador`)
-- **Descrição:** Realiza o logout do usuário, invalidando o token JWT ativo e removendo o cookie de autenticação.
-- **Corpo da Requisição:** Não necessário (o token é obtido automaticamente do cookie ou header Authorization)
+- **Descrição:** Invalida o token JWT do usuário, realizando o logout.
 - **Respostas:**
   - `200 OK`: Logout realizado com sucesso.
-    ```json
-    {
-      "status": 200,
-      "message": "Logout realizado com sucesso."
-    }
-    ```
-  - `400 Bad Request`: Token não fornecido ou inválido para logout.
+  - `400 Bad Request`: Token não fornecido ou inválido.
   - `401 Unauthorized`: Token de autenticação ausente ou inválido.
   - `500 Internal Server Error`: Erro interno do servidor.
 
-**Observações sobre o Logout:**
-- O token JWT é adicionado a uma blacklist interna para impedir seu uso futuro
-- O cookie de autenticação é removido do navegador
-- Tokens invalidados são automaticamente limpos da blacklist após sua expiração natural
-- A funcionalidade funciona tanto com tokens enviados via cookie quanto via header Authorization
+### 3. Validar Token JWT
+- **Caminho:** `/api/autenticacao/validar-token`
+- **Método HTTP:** `GET`
+- **Autenticação:** Necessária (via `autenticador`)
+- **Descrição:** Verifica se o token JWT fornecido na requisição é válido e não está na blacklist.
+- **Respostas:**
+  - `200 OK`: Token JWT válido.
+    ```json
+    {
+      "status": 200,
+      "message": "Token JWT válido.",
+      "data": {
+        "usuario": {
+          "id": "number",
+          "email": "string",
+          "tipo": "string" (e.g., "administrador", "hospede")
+        }
+      }
+    }
+    ```
+  - `401 Unauthorized`: Token de autenticação ausente, inválido ou na blacklist.
+  - `500 Internal Server Error`: Erro interno do servidor.
+
 

@@ -7,7 +7,7 @@ import EventoData from '../modelos/eventoData.js';
 import { respostaHelper } from '../utilitarios/helpers/respostaHelper.js';
 import { validationResult } from 'express-validator';
 
-// POST /api/pedidos
+
 export const criarPedido = async (req, res) => {
   const erros = validationResult(req);
   if (!erros.isEmpty()) {
@@ -22,7 +22,7 @@ export const criarPedido = async (req, res) => {
     const agora = new Date();
     const novoPedido = await Pedido.create({ id_quarto, id_evento, data_pedido: agora, horario_cafe_manha });
 
-    // Relaciona itens ao pedido
+    
     for (const it of itens) {
       await itemPedido.create({
         id_pedido: novoPedido.id_pedido,
@@ -45,7 +45,7 @@ export const criarPedido = async (req, res) => {
   }
 };
 
-// GET /api/pedidos/:idPedido
+
 export const obterPedido = async (req, res) => {
   try {
     const { idPedido } = req.params;
@@ -68,7 +68,7 @@ export const obterPedido = async (req, res) => {
       }));
     }
 
-    // Estrutura resposta detalhada
+    
     const itens = pedido.Items.map(it => ({
       id_item: it.id_item,
       nome: it.nome_item,
@@ -98,7 +98,7 @@ export const obterPedido = async (req, res) => {
   }
 };
 
-// PUT /api/pedidos/:idPedido
+
 export const atualizarPedido = async (req, res) => {
   const erros = validationResult(req);
   if (!erros.isEmpty()) {
@@ -119,9 +119,8 @@ export const atualizarPedido = async (req, res) => {
       }));
     }
 
-    // (Valide se pode editar conforme regras de prazo/finalização)
+    
 
-    // Remove todos os itens antigos e adiciona os novos
     await itemPedido.destroy({ where: { id_pedido: idPedido } });
     for (const it of itens) {
       await itemPedido.create({
@@ -144,7 +143,7 @@ export const atualizarPedido = async (req, res) => {
   }
 };
 
-// DELETE /api/pedidos/:idPedido
+
 export const deletarPedido = async (req, res) => {
   const { idPedido } = req.params;
   try {
@@ -170,11 +169,10 @@ export const deletarPedido = async (req, res) => {
   }
 };
 
-// GET /api/pedidos/quarto/:numQuarto
+
 export const listarPedidosPorQuarto = async (req, res) => {
   const { numQuarto } = req.params;
   try {
-    // Busca o quarto pelo número
     const quarto = await Quarto.findOne({ where: { num_quarto: numQuarto } });
     if (!quarto) {
       return res.status(404).json(respostaHelper({
@@ -210,11 +208,11 @@ export const listarPedidosPorQuarto = async (req, res) => {
   }
 };
 
-// GET /api/pedidos/eventos/ativos
+
 export const listarPedidosEventosAtivos = async (req, res) => {
   try {
     const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0); // Normaliza para o início do dia
+    hoje.setHours(0, 0, 0, 0); 
 
     const pedidos = await Pedido.findAll({
       include: [
@@ -237,18 +235,17 @@ export const listarPedidosEventosAtivos = async (req, res) => {
       order: [['data_pedido', 'DESC']]
     });
 
-    // Filtrar pedidos de eventos ativos na data atual
+    
     const pedidosFiltrados = [];
     
     for (const pedido of pedidos) {
       const evento = pedido.Evento;
       let eventoAtivo = false;
 
-      // Se o evento é recorrente (todos os dias), está sempre ativo
+      
       if (evento.recorrencia) {
         eventoAtivo = true;
       } else {
-        // Verificar se há data específica para hoje
         const dataEvento = await EventoData.findOne({
           where: {
             id_evento: evento.id_evento,
@@ -299,7 +296,6 @@ export const listarPedidosEventosAtivos = async (req, res) => {
   }
 };
 
-// GET /api/pedidos/relatorio/:idEvento
 export const relatorioGeralEvento = async (req, res) => {
   try {
     const { idEvento } = req.params;
@@ -397,7 +393,6 @@ export const relatorioGeralEvento = async (req, res) => {
   }
 };
 
-// GET /api/pedidos/historico
 export const historicoComPaginacao = async (req, res) => {
   try {
     const { page = 1, limit = 50 } = req.query;
@@ -459,4 +454,56 @@ export const historicoComPaginacao = async (req, res) => {
     }));
   }
 };
+
+
+
+export const listarPedidosHoje = async (req, res) => {
+  try {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    const pedidos = await Pedido.findAll({
+      where: {
+        data_pedido: hoje
+      },
+      include: [
+        {
+          model: Evento,
+          attributes: ["nome_evento", "desc_evento"]
+        },
+        {
+          model: Quarto,
+          attributes: ["num_quarto"]
+        }
+      ],
+      order: [["data_pedido", "DESC"]]
+    });
+
+    const pedidosFormatados = pedidos.map(pedido => ({
+      id_pedido: pedido.id_pedido,
+      data_pedido: pedido.data_pedido,
+      quarto: pedido.Quarto.num_quarto,
+      horario_cafe_manha: pedido.horario_cafe_manha,
+      evento: pedido.Evento ? {
+        nome_evento: pedido.Evento.nome_evento,
+        desc_evento: pedido.Evento.desc_evento
+      } : null
+    }));
+
+    return res.status(200).json(respostaHelper({
+      status: 200,
+      message: "Pedidos de hoje listados com sucesso.",
+      data: pedidosFormatados
+    }));
+
+  } catch (err) {
+    console.error("Erro ao listar pedidos de hoje:", err);
+    return res.status(500).json(respostaHelper({
+      status: 500,
+      message: "Erro ao listar pedidos de hoje.",
+      errors: [err.message]
+    }));
+  }
+};
+
 

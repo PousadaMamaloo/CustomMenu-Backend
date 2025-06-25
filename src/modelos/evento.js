@@ -21,12 +21,12 @@ const Evento = sequelize.define('Evento', {
     defaultValue: true
   },
   recorrencia: {
-    type: DataTypes.BOOLEAN, // true = todos os dias
+    type: DataTypes.BOOLEAN,
     allowNull: false,
     defaultValue: false
   },
   publico_alvo: {
-    type: DataTypes.BOOLEAN, // true = todos os quartos
+    type: DataTypes.BOOLEAN, 
     allowNull: false,
     defaultValue: false
   }

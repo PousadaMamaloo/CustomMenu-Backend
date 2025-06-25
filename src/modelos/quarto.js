@@ -41,7 +41,7 @@ const Quarto = sequelize.define('Quarto', {
 
   timestamps: false, 
   validate: {
-    // Validações adicionais
+    
     capa_adultos_min: function() {
       if (this.capa_adultos < 0) {
         throw new Error('A capacidade de adultos não pode ser negativa');
