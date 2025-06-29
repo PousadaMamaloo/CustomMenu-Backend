@@ -43,7 +43,10 @@ export const loginAdministrador = async (req, res) => {
 
     return res.status(200).json(respostaHelper({
       status: 200,
-      message: 'Login realizado com sucesso.'
+      message: 'Login realizado com sucesso.',
+      data: {
+        usuario: admin.usuario_admin
+      }
     }));
 
   } catch (error) {
