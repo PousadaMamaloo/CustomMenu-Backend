@@ -61,7 +61,7 @@ export const loginHospede = async (req, res) => {
       status: 200,
       message: 'Login realizado com sucesso.',
       data: {
-        nome_hospede_principal: hospede.nome_hospede,
+        usuario: hospede.nome_hospede,
         id_quarto: quarto.id_quarto,
         num_quarto: quarto.num_quarto
       }
