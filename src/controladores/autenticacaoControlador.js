@@ -127,18 +127,28 @@ export const logout = async (req, res) => {
 };
 
 
+
 export const validarToken = async (req, res) => {
   try {
-    
+    if (!req.user) {
+      return res.status(401).json(respostaHelper({
+        status: 401,
+        message: "Acesso não autorizado.",
+        errors: [{ msg: "Token não fornecido ou inválido." }]
+      }));
+    }
+
     return res.status(200).json(respostaHelper({
       status: 200,
       message: "Token JWT válido.",
-      data: { usuario: req.user }
+      data: { usuario: req.user } // req.user contém o payload do token
     }));
+
   } catch (error) {
+    console.error("Erro interno ao validar token:", error); 
     return res.status(500).json(respostaHelper({
       status: 500,
-      message: "Erro ao validar token.",
+      message: "Erro interno do servidor ao validar o token.",
       errors: [error.message]
     }));
   }
