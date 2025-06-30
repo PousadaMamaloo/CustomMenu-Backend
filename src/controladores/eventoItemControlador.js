@@ -1,7 +1,11 @@
-import EventoItem from '../modelos/eventoItem.js';
-import Evento from '../modelos/evento.js'; // Importar o modelo Evento
-import Item from '../modelos/item.js'; // Importar o modelo Item
 import { respostaHelper } from '../utilitarios/helpers/respostaHelper.js';
+import sequelize from '../config/database.js'; // 1. Importar a instância do sequelize
+import { QueryTypes } from 'sequelize';      // 2. Importar os tipos de query
+
+// Os modelos não são mais necessários para a função de listagem, mas podem ser usados em outras funções.
+import EventoItem from '../modelos/eventoItem.js';
+import Evento from '../modelos/evento.js';
+import Item from '../modelos/item.js';
 
 export const associarItemEvento = async (req, res) => {
   const { id_evento, id_item, disp_item } = req.body;
@@ -43,38 +47,82 @@ export const listarAssociacoes = async (req, res) => {
 };
 
 /**
- * @description Busca um evento pelo ID e lista todos os itens associados a ele.
- * Esta é a função que o hóspede usará.
+ * @description Busca um evento pelo ID e lista seus detalhes, itens, datas e horários usando uma consulta SQL pura.
  */
 export const listarItensPorEvento = async (req, res) => {
   try {
-    const { id_evento } = req.params; // Pega o ID do evento da URL
+    const { id_evento } = req.params;
 
-    const evento = await Evento.findByPk(id_evento, {
-      include: [{
-        model: Item,
-        as: 'Itens', 
-        through: { attributes: [] } 
-      }]
+    const sqlEvento = `
+      SELECT nome_evento, desc_evento
+      FROM mamaloo.tab_evento
+      WHERE id_evento = :id_evento;
+    `;
+    const eventoInfo = await sequelize.query(sqlEvento, {
+      replacements: { id_evento },
+      type: QueryTypes.SELECT,
+      plain: true
     });
 
-    if (!evento) {
+    if (!eventoInfo) {
       return res.status(404).json(respostaHelper({
         status: 404,
         message: 'Evento não encontrado.'
       }));
     }
 
+    const sqlItens = `
+      SELECT i.*
+      FROM mamaloo.tab_item AS i
+      INNER JOIN mamaloo.tab_re_evento_item AS rei ON i.id_item = rei.id_item
+      WHERE rei.id_evento = :id_evento;
+    `;
+    const itens = await sequelize.query(sqlItens, {
+      replacements: { id_evento },
+      type: QueryTypes.SELECT
+    });
+
+    const sqlDatas = `
+      SELECT data_evento
+      FROM mamaloo.tab_re_evento_data
+      WHERE id_evento = :id_evento;
+    `;
+    const datasResult = await sequelize.query(sqlDatas, {
+      replacements: { id_evento },
+      type: QueryTypes.SELECT
+    });
+    const datas = datasResult.map(d => d.data_evento);
+
+
+    const sqlHorarios = `
+      SELECT h.id_horario, h.horario
+      FROM mamaloo.tab_horario AS h
+      INNER JOIN mamaloo.tab_re_evento_horario AS reh ON h.id_horario = reh.id_horario
+      WHERE reh.id_evento = :id_evento;
+    `;
+    const horarios = await sequelize.query(sqlHorarios, {
+      replacements: { id_evento },
+      type: QueryTypes.SELECT
+    });
+
+    const resultadoFinal = {
+      ...eventoInfo,
+      datas,        
+      horarios,     
+      itens         
+    };
+
     return res.status(200).json(respostaHelper({
       status: 200,
-      message: 'Itens do evento listados com sucesso!',
-      data: evento.Itens 
+      message: 'Detalhes do evento listados com sucesso!',
+      data: resultadoFinal
     }));
 
   } catch (err) {
+    console.error("Erro na consulta SQL:", err);
     return res.status(500).json(respostaHelper({
       status: 500,
-      message: 'Erro ao listar os itens do evento.',
+      message: 'Erro ao listar os detalhes do evento.',
       errors: [err.message]
     }));
   }
