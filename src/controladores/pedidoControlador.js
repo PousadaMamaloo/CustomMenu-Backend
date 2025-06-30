@@ -17,14 +17,16 @@ export const criarPedido = async (req, res) => {
       errors: erros.array()
     }));
   }
-  const { id_quarto, id_evento, itens, horario_cafe_manha, obs_pedido } = req.body;
+
+  const { id_quarto, id_evento, id_horario, itens, obs_pedido } = req.body;
+
   try {
     const agora = new Date();
     const novoPedido = await Pedido.create({
       id_quarto,
       id_evento,
+      id_horario,
       data_pedido: agora,
-      horario_cafe_manha,
       obs_pedido
     });
 

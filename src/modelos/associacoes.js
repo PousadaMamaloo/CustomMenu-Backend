@@ -64,7 +64,9 @@ Pedido.belongsTo(Quarto, {
   foreignKey: 'id_quarto'
 });
 
-// Evento <-> Horário 
+Pedido.belongsTo(Horario, { foreignKey: 'id_horario' });
+Horario.hasMany(Pedido, { foreignKey: 'id_horario' });
+
 Evento.belongsToMany(Horario, {
   through: EventoHorario,
   foreignKey: 'id_evento',
