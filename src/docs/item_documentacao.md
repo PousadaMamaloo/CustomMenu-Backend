@@ -80,19 +80,23 @@
 - **Caminho:** `/api/itens/excluir/:id`
 - **Método HTTP:** `DELETE`
 - **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
-- **Descrição:** Exclui um item existente pelo seu ID.
+- **Descrição:** Exclui um item existente pelo seu ID, removendo previamente todas as associações com eventos e pedidos vinculados.
+- **Comportamento:**
+  - A exclusão é realizada dentro de uma transação para garantir que todas as associações sejam removidas antes do item.
+  - As seguintes tabelas são afetadas:
+    - `tab_re_evento_item` (associação com eventos)
+    - `tab_re_item_pedido` (associação com pedidos realizados)
 - **Parâmetros de Caminho:**
   - `id`: ID do item (number).
 - **Respostas:**
-  - `200 OK`: Item excluído com sucesso.
+  - `200 OK`: Item e suas associações excluídos com sucesso.
     ```json
     {
       "mensagem": "Item excluído com sucesso!"
     }
     ```
   - `404 Not Found`: Item não encontrado.
-  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
-  - `500 Internal Server Error`: Erro interno do servidor.
+  - `401 Unauthorized`: Token de autenticaçã
 
 ### 5. Listar Categorias Únicas
 - **Caminho:** `/api/itens/categorias`
