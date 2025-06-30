@@ -244,28 +244,43 @@ export const atualizarHospede = async (req, res) => {
 };
 
 /**
- * Deleta um hóspede do banco de dados.
+ * Deleta um hóspede do banco de dados e desassocia-o do quarto.
  */
 export const deletarHospede = async (req, res) => {
+  const t = await sequelize.transaction();
   try {
     const { id } = req.params;
 
-    const linhasRemovidas = await Hospede.destroy({
-      where: { id_hospede: id }
-    });
+    const hospede = await Hospede.findByPk(id, { transaction: t });
 
-    if (linhasRemovidas === 0) {
+    if (!hospede) {
+      await t.rollback();
       return res.status(404).json(respostaHelper({
         status: 404,
         message: 'Hóspede não encontrado para exclusão.'
       }));
     }
 
+    const quartoAssociado = await Quarto.findOne({
+      where: { id_hospede_responsavel: id },
+      transaction: t
+    });
+
+    if (quartoAssociado) {
+      quartoAssociado.id_hospede_responsavel = null;
+      await quartoAssociado.save({ transaction: t });
+    }
+
+    await hospede.destroy({ transaction: t });
+
+    await t.commit();
+
     return res.status(200).json(respostaHelper({
       status: 200,
-      message: 'Hóspede excluído com sucesso.'
+      message: 'Hóspede excluído e quarto desassociado com sucesso.'
     }));
   } catch (error) {
+    await t.rollback();
     return res.status(500).json(respostaHelper({
       status: 500,
       message: 'Erro ao excluir hóspede.',
