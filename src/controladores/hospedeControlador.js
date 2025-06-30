@@ -1,12 +1,17 @@
 import Hospede from '../modelos/hospede.js';
 import Quarto from '../modelos/quarto.js';
+import sequelize from '../config/database.js'; // Importa a instância do sequelize para usar transações
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import {respostaHelper} from '../utilitarios/helpers/respostaHelper.js';
+import { respostaHelper } from '../utilitarios/helpers/respostaHelper.js';
 
+// Constantes para configuração do JWT
 const JWT_SECRET = process.env.JWT_SECRET || 'seu-segredo-jwt';
 const JWT_EXPIRES = '1d';
 
+/**
+ * Realiza o login do hóspede com base no número do quarto e telefone.
+ */
 export const loginHospede = async (req, res) => {
   const { num_quarto, telef_hospede } = req.body;
 
@@ -37,7 +42,7 @@ export const loginHospede = async (req, res) => {
         message: 'Telefone incorreto.'
       }));
     }
-    
+
     const hoje = new Date();
     const dataChegada = new Date(hospede.data_chegada);
     const dataSaida = new Date(hospede.data_saida);
@@ -58,9 +63,9 @@ export const loginHospede = async (req, res) => {
 
     res.cookie('token', token, {
       httpOnly: true,
-      secure: false, 
+      secure: process.env.NODE_ENV === 'production', // Mais seguro para produção
       sameSite: 'lax',
-      maxAge: 24 * 60 * 60 * 1000
+      maxAge: 24 * 60 * 60 * 1000 // 1 dia
     });
 
     return res.status(200).json(respostaHelper({
@@ -77,36 +82,80 @@ export const loginHospede = async (req, res) => {
   }
 };
 
+
+/**
+ * Cria um novo hóspede e o associa a um quarto específico.
+ * Utiliza uma transação para garantir a integridade dos dados.
+ */
 export const criarHospede = async (req, res) => {
+  const t = await sequelize.transaction();
+
   try {
-    const { nome_hospede, email_hospede, telef_hospede, data_chegada, data_saida } = req.body;
+    // O corpo da requisição agora deve incluir o 'id_quarto'
+    const { id_quarto, nome_hospede, email_hospede, telef_hospede, data_chegada, data_saida } = req.body;
+
+    if (!id_quarto) {
+      await t.rollback();
+      return res.status(400).json(respostaHelper({
+        status: 400,
+        message: 'O ID do quarto (id_quarto) é obrigatório para criar e associar um hóspede.'
+      }));
+    }
+
+    const quarto = await Quarto.findByPk(id_quarto, { transaction: t });
+
+    if (!quarto) {
+      await t.rollback();
+      return res.status(404).json(respostaHelper({
+        status: 404,
+        message: 'Quarto não encontrado.'
+      }));
+    }
+
+    if (quarto.id_hospede_responsavel) {
+      await t.rollback();
+      return res.status(409).json(respostaHelper({
+        status: 409,
+        message: 'Este quarto já possui um hóspede responsável.'
+      }));
+    }
 
     const senha_hash = await bcrypt.hash(telef_hospede, 10);
 
-    const novo = await Hospede.create({
+    const novoHospede = await Hospede.create({
       nome_hospede,
       email_hospede,
       telef_hospede,
       data_chegada,
       data_saida,
       senha_hash
-    });
+    }, { transaction: t });
+
+    quarto.id_hospede_responsavel = novoHospede.id_hospede;
+    await quarto.save({ transaction: t });
+
+    await t.commit();
 
     return res.status(201).json(respostaHelper({
       status: 201,
-      message: 'Hóspede criado com sucesso.',
-      data: novo
+      message: 'Hóspede criado e associado ao quarto com sucesso!',
+      data: {}
     }));
 
   } catch (error) {
+    await t.rollback();
     return res.status(500).json(respostaHelper({
       status: 500,
-      message: 'Erro ao criar hóspede.',
+      message: 'Erro interno ao criar hóspede.',
       errors: [error.message]
     }));
   }
 };
 
+
+/**
+ * Lista todos os hóspedes cadastrados no sistema.
+ */
 export const listarHospedes = async (req, res) => {
   try {
     const hospedes = await Hospede.findAll();
@@ -124,6 +173,9 @@ export const listarHospedes = async (req, res) => {
   }
 };
 
+/**
+ * Busca um hóspede específico pelo seu ID.
+ */
 export const buscarHospedePorId = async (req, res) => {
   try {
     const { id } = req.params;
@@ -150,25 +202,57 @@ export const buscarHospedePorId = async (req, res) => {
   }
 };
 
+/**
+ * Atualiza os dados de um hóspede, com a opção de transferi-lo para outro quarto.
+ */
 export const atualizarHospede = async (req, res) => {
+  const t = await sequelize.transaction();
   try {
     const { id } = req.params;
     const dadosAtualizados = req.body;
+    const { id_quarto: novoQuartoId, ...outrosDados } = dadosAtualizados;
 
-    if (dadosAtualizados.telef_hospede) {
-      dadosAtualizados.senha_hash = await bcrypt.hash(dadosAtualizados.telef_hospede, 10);
-    }
-
-    const [linhasAfetadas] = await Hospede.update(dadosAtualizados, {
-      where: { id_hospede: id }
-    });
-
-    if (linhasAfetadas === 0) {
+    const hospede = await Hospede.findByPk(id, { transaction: t });
+    if (!hospede) {
+      await t.rollback();
       return res.status(404).json(respostaHelper({
         status: 404,
         message: 'Hóspede não encontrado para atualizar.'
       }));
     }
+
+    if (outrosDados.telef_hospede) {
+      outrosDados.senha_hash = await bcrypt.hash(outrosDados.telef_hospede, 10);
+    }
+
+    await hospede.update(outrosDados, { transaction: t });
+
+    if (novoQuartoId) {
+      const quartoAntigo = await Quarto.findOne({ where: { id_hospede_responsavel: id }, transaction: t });
+      const novoQuarto = await Quarto.findByPk(novoQuartoId, { transaction: t });
+
+      if (!novoQuarto) {
+        await t.rollback();
+        return res.status(404).json(respostaHelper({ status: 404, message: `O novo quarto com ID ${novoQuartoId} não foi encontrado.` }));
+      }
+
+      if (novoQuarto.id_hospede_responsavel && novoQuarto.id_hospede_responsavel !== id) {
+        await t.rollback();
+        return res.status(409).json(respostaHelper({ status: 409, message: 'O novo quarto já está ocupado por outro hóspede.' }));
+      }
+
+      if (quartoAntigo && quartoAntigo.id_quarto !== novoQuarto.id_quarto) {
+        quartoAntigo.id_hospede_responsavel = null;
+        await quartoAntigo.save({ transaction: t });
+      }
+
+      novoQuarto.id_hospede_responsavel = id;
+      await novoQuarto.save({ transaction: t });
+    }
+
+    await t.commit();
+
+    const hospedeAtualizado = await Hospede.findByPk(id);
 
     return res.status(200).json(respostaHelper({
       status: 200,
@@ -176,6 +260,7 @@ export const atualizarHospede = async (req, res) => {
     }));
 
   } catch (error) {
+    await t.rollback();
     return res.status(500).json(respostaHelper({
       status: 500,
       message: 'Erro ao atualizar hóspede.',
@@ -184,26 +269,45 @@ export const atualizarHospede = async (req, res) => {
   }
 };
 
+
+/**
+ * Deleta um hóspede do banco de dados e desassocia-o do quarto.
+ */
 export const deletarHospede = async (req, res) => {
+  const t = await sequelize.transaction();
   try {
     const { id } = req.params;
 
-    const linhasRemovidas = await Hospede.destroy({
-      where: { id_hospede: id }
-    });
+    const hospede = await Hospede.findByPk(id, { transaction: t });
 
-    if (linhasRemovidas === 0) {
+    if (!hospede) {
+      await t.rollback();
       return res.status(404).json(respostaHelper({
         status: 404,
         message: 'Hóspede não encontrado para exclusão.'
       }));
     }
 
+    const quartoAssociado = await Quarto.findOne({
+      where: { id_hospede_responsavel: id },
+      transaction: t
+    });
+
+    if (quartoAssociado) {
+      quartoAssociado.id_hospede_responsavel = null;
+      await quartoAssociado.save({ transaction: t });
+    }
+
+    await hospede.destroy({ transaction: t });
+
+    await t.commit();
+
     return res.status(200).json(respostaHelper({
       status: 200,
-      message: 'Hóspede excluído com sucesso.'
+      message: 'Hóspede excluído e quarto desassociado com sucesso.'
     }));
   } catch (error) {
+    await t.rollback();
     return res.status(500).json(respostaHelper({
       status: 500,
       message: 'Erro ao excluir hóspede.',

@@ -1,136 +1,144 @@
 ## Rotas de Hóspedes (`/api/hospedes`)
 
+Esta documentação detalha os endpoints para gerenciar os hóspedes e sua associação com os quartos.
+
+---
+
 ### 1. Login Hóspede
 - **Caminho:** `/api/hospedes/login`
 - **Método HTTP:** `POST`
 - **Autenticação:** Nenhuma
-- **Descrição:** Realiza o login de um hóspede e retorna um token de autenticação.
+- **Descrição:** Autentica um hóspede com base no número do seu quarto e telefone. Se as credenciais estiverem corretas e a estadia estiver ativa, retorna um cookie com o token de autenticação.
 - **Corpo da Requisição (JSON):**
   ```json
   {
-    "num_quarto": "string",
-    "telef_hospede": "string"
+    "num_quarto": 101,
+    "telef_hospede": "82999887766"
   }
   ```
 - **Respostas:**
   - `200 OK`: Login bem-sucedido.
     ```json
     {
-      "token": "string"
+      "status": 200,
+      "message": "Login realizado com sucesso."
     }
     ```
-  - `400 Bad Request`: Credenciais inválidas.
+  - `401 Unauthorized`: Telefone incorreto.
+  - `403 Forbidden`: A estadia do hóspede não está no período ativo (data de chegada/saída).
+  - `404 Not Found`: Quarto não encontrado ou sem hóspede responsável associado.
   - `500 Internal Server Error`: Erro interno do servidor.
 
-### 2. Cadastrar Hóspede
+### 2. Cadastrar Hóspede e Associar a um Quarto
 - **Caminho:** `/api/hospedes/cadastrar`
 - **Método HTTP:** `POST`
-- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
-- **Validação:** `hospedeValidador`
-- **Descrição:** Cadastra um novo hóspede no sistema.
+- **Autenticação:** Necessária (Administrador)
+- **Descrição:** Cadastra um novo hóspede e o associa imediatamente a um quarto vago. A operação é transacional: ou ambos os passos são concluídos com sucesso, ou nada é salvo no banco de dados.
 - **Corpo da Requisição (JSON):**
   ```json
   {
-    "nome_hospede": "string",
-    "email_hospede": "string",
-    "telef_hospede": "string",
-    "data_chegada": "YYYY-MM-DD",
-    "data_saida": "YYYY-MM-DD"
+    "id_quarto": 15,
+    "nome_hospede": "Maria Souza",
+    "email_hospede": "maria.s@exemplo.com",
+    "telef_hospede": "82999887766",
+    "data_chegada": "2025-08-01",
+    "data_saida": "2025-08-10"
   }
   ```
+  * `id_quarto` (number): **Obrigatório**. ID do quarto a ser ocupado.
 - **Respostas:**
-  - `201 Created`: Hóspede cadastrado com sucesso.
+  - `201 Created`: Hóspede criado e associado com sucesso.
     ```json
     {
-      "mensagem": "Hóspede cadastrado com sucesso!",
-      "hospede": { ... }
+      "status": 201,
+      "message": "Hóspede criado e associado ao quarto com sucesso!",
+      "data": { }
     }
     ```
-  - `400 Bad Request`: Dados inválidos fornecidos.
-  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `400 Bad Request`: O `id_quarto` não foi fornecido.
+  - `404 Not Found`: O quarto com o `id_quarto` fornecido não foi encontrado.
+  - `409 Conflict`: O quarto já está ocupado por outro hóspede.
   - `500 Internal Server Error`: Erro interno do servidor.
 
 ### 3. Listar Hóspedes
 - **Caminho:** `/api/hospedes/listar`
 - **Método HTTP:** `GET`
-- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
-- **Descrição:** Lista todos os hóspedes existentes.
+- **Autenticação:** Necessária (Administrador)
+- **Descrição:** Retorna uma lista de todos os hóspedes cadastrados no sistema.
 - **Respostas:**
   - `200 OK`: Lista de hóspedes retornada com sucesso.
     ```json
-    [
-      { "id": 1, "nome": "...", "email": "...", ... },
-      { "id": 2, "nome": "...", "email": "...", ... }
-    ]
+    {
+      "status": 200,
+      "message": "Lista de hóspedes.",
+      "data": [ ]
+    }
     ```
-  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
   - `500 Internal Server Error`: Erro interno do servidor.
 
 ### 4. Buscar Hóspede por ID
 - **Caminho:** `/api/hospedes/:id`
 - **Método HTTP:** `GET`
-- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
-- **Descrição:** Busca um hóspede específico pelo seu ID.
+- **Autenticação:** Necessária (Administrador)
+- **Descrição:** Busca e retorna os dados de um hóspede específico pelo seu ID.
 - **Parâmetros de Caminho:**
-  - `id`: ID do hóspede (number).
+  - `id` (number): ID do hóspede a ser buscado.
 - **Respostas:**
   - `200 OK`: Hóspede encontrado.
     ```json
     {
-      "id": 1,
-      "nome": "...",
-      "email": "...",
-      ...
+      "status": 200,
+      "message": "Hóspede encontrado.",
+      "data": { "id_hospede": 1, "nome_hospede": "...", "..." }
     }
     ```
   - `404 Not Found`: Hóspede não encontrado.
-  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
   - `500 Internal Server Error`: Erro interno do servidor.
 
-### 5. Atualizar Hóspede
+### 5. Atualizar Hóspede / Transferir de Quarto
 - **Caminho:** `/api/hospedes/:id`
 - **Método HTTP:** `PUT`
-- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
-- **Validação:** `hospedeValidador`
-- **Descrição:** Atualiza as informações de um hóspede existente pelo seu ID.
+- **Autenticação:** Necessária (Administrador)
+- **Descrição:** Atualiza as informações de um hóspede. Opcionalmente, pode transferir o hóspede para um novo quarto se o campo `id_quarto` for fornecido. A operação é transacional.
 - **Parâmetros de Caminho:**
-  - `id`: ID do hóspede (number).
+  - `id` (number): ID do hóspede a ser atualizado.
 - **Corpo da Requisição (JSON):**
   ```json
   {
-    "nome_hospede": "string" (opcional),
-    "email_hospede": "string" (opcional),
-    "telef_hospede": "string" (opcional),
-    "data_chegada": "YYYY-MM-DD" (opcional),
-    "data_saida": "YYYY-MM-DD" (opcional)
+    "id_quarto": 25,
+    "nome_hospede": "Maria Silva Souza",
+    "data_saida": "2025-08-12"
   }
   ```
+  * `id_quarto` (number): **Opcional**. Se fornecido, o hóspede será transferido para o novo quarto (que deve estar vago).
+  * Demais campos são opcionais.
 - **Respostas:**
   - `200 OK`: Hóspede atualizado com sucesso.
     ```json
     {
-      "mensagem": "Hóspede atualizado com sucesso!"
+      "status": 200,
+      "message": "Hóspede atualizado com sucesso.",
+      "data": { "...dados do hospede atualizado..." }
     }
     ```
-  - `400 Bad Request`: Dados inválidos fornecidos.
-  - `404 Not Found`: Hóspede não encontrado.
-  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `404 Not Found`: Hóspede ou novo quarto não encontrado.
+  - `409 Conflict`: O novo quarto para o qual se tenta transferir o hóspede já está ocupado.
   - `500 Internal Server Error`: Erro interno do servidor.
 
 ### 6. Deletar Hóspede
 - **Caminho:** `/api/hospedes/:id`
 - **Método HTTP:** `DELETE`
-- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
-- **Descrição:** Deleta um hóspede existente pelo seu ID.
+- **Autenticação:** Necessária (Administrador)
+- **Descrição:** Exclui um hóspede do sistema. Se o hóspede for o responsável por um quarto, essa associação é removida, deixando o quarto vago. A operação é transacional.
 - **Parâmetros de Caminho:**
-  - `id`: ID do hóspede (number).
+  - `id` (number): ID do hóspede a ser deletado.
 - **Respostas:**
   - `200 OK`: Hóspede deletado com sucesso.
     ```json
     {
-      "mensagem": "Hóspede deletado com sucesso!"
+      "status": 200,
+      "message": "Hóspede excluído e quarto desassociado com sucesso."
     }
     ```
   - `404 Not Found`: Hóspede não encontrado.
-  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
   - `500 Internal Server Error`: Erro interno do servidor.
