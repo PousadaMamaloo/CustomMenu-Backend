@@ -67,6 +67,10 @@
   - `401 Unauthorized`: Token de autenticação ausente ou inválido.
   - `403 Forbidden`: Usuário não autorizado.
   - `500 Internal Server Error`: Erro interno do servidor.
+- **Observações:**
+- O campo `"horarios"` deve conter horários no formato de 24 horas (`"HH:mm"`), por exemplo: `"08:00"`, `"13:30"`, `"18:45"`.
+- Os horários informados devem já existir previamente na tabela `tab_horario`. Caso contrário, o evento não será vinculado corretamente a um horário.
+
 
 ### 4. Atualizar Evento
 - **Caminho:** `/api/eventos/:id`
@@ -101,14 +105,23 @@
   - `403 Forbidden`: Usuário não autorizado.
   - `404 Not Found`: Evento não encontrado.
   - `500 Internal Server Error`: Erro interno do servidor.
+- **Observações:**
+- O campo `"horarios"` deve conter horários no formato de 24 horas (`"HH:mm"`), por exemplo: `"08:00"`, `"13:30"`, `"18:45"`.
+- Os horários informados devem já existir previamente na tabela `tab_horario`. Caso contrário, o evento não será vinculado corretamente a um horário.
 
 ### 5. Excluir Evento
 - **Caminho:** `/api/eventos/:id`
 - **Método HTTP:** `DELETE`
 - **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
-- **Descrição:** Exclui um evento existente pelo seu ID.
+- **Descrição:** Exclui um evento existente pelo seu ID, removendo também todos os dados associados:
+  - Itens (`tab_re_evento_item`)
+  - Quartos (`tab_re_evento_quarto`)
+  - Datas (`tab_re_evento_data`)
+  - Horários (`tab_re_evento_horario`)
+  - Pedidos vinculados (`tab_pedido`)
+  - Itens dos pedidos (`tab_re_item_pedido`)
 - **Parâmetros de Caminho:**
-  - `id`: ID do evento (number).
+  - `id`: ID do evento (number)
 - **Respostas:**
   - `200 OK`: Evento excluído com sucesso.
     ```json
@@ -120,6 +133,15 @@
   - `403 Forbidden`: Usuário não autorizado.
   - `404 Not Found`: Evento não encontrado.
   - `500 Internal Server Error`: Erro interno do servidor.
+    ```json
+    {
+      "mensagem": "Erro interno ao excluir evento.",
+      "errors": ["Detalhes do erro"]
+    }
+    ```
+- **Observações:**
+  - A exclusão é realizada dentro de uma transação.
+  - Caso haja falha em algum ponto da exclusão, todas as ações são revertidas.
 
 ### 6. Vincular Itens a Evento
 - **Caminho:** `/api/eventos/:id/itens`
