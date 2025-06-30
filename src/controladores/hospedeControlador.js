@@ -203,28 +203,54 @@ export const buscarHospedePorId = async (req, res) => {
 };
 
 /**
- * Atualiza os dados de um hóspede existente.
+ * Atualiza os dados de um hóspede, com a opção de transferi-lo para outro quarto.
  */
 export const atualizarHospede = async (req, res) => {
+  const t = await sequelize.transaction();
   try {
     const { id } = req.params;
     const dadosAtualizados = req.body;
+    const { id_quarto: novoQuartoId, ...outrosDados } = dadosAtualizados;
 
-    // Se o telefone for atualizado, atualiza também o hash da senha
-    if (dadosAtualizados.telef_hospede) {
-      dadosAtualizados.senha_hash = await bcrypt.hash(dadosAtualizados.telef_hospede, 10);
-    }
-
-    const [linhasAfetadas] = await Hospede.update(dadosAtualizados, {
-      where: { id_hospede: id }
-    });
-
-    if (linhasAfetadas === 0) {
+    const hospede = await Hospede.findByPk(id, { transaction: t });
+    if (!hospede) {
+      await t.rollback();
       return res.status(404).json(respostaHelper({
         status: 404,
         message: 'Hóspede não encontrado para atualizar.'
       }));
     }
+
+    if (outrosDados.telef_hospede) {
+      outrosDados.senha_hash = await bcrypt.hash(outrosDados.telef_hospede, 10);
+    }
+
+    await hospede.update(outrosDados, { transaction: t });
+
+    if (novoQuartoId) {
+      const quartoAntigo = await Quarto.findOne({ where: { id_hospede_responsavel: id }, transaction: t });
+      const novoQuarto = await Quarto.findByPk(novoQuartoId, { transaction: t });
+
+      if (!novoQuarto) {
+        await t.rollback();
+        return res.status(404).json(respostaHelper({ status: 404, message: `O novo quarto com ID ${novoQuartoId} não foi encontrado.` }));
+      }
+
+      if (novoQuarto.id_hospede_responsavel && novoQuarto.id_hospede_responsavel !== id) {
+        await t.rollback();
+        return res.status(409).json(respostaHelper({ status: 409, message: 'O novo quarto já está ocupado por outro hóspede.' }));
+      }
+
+      if (quartoAntigo && quartoAntigo.id_quarto !== novoQuarto.id_quarto) {
+        quartoAntigo.id_hospede_responsavel = null;
+        await quartoAntigo.save({ transaction: t });
+      }
+
+      novoQuarto.id_hospede_responsavel = id;
+      await novoQuarto.save({ transaction: t });
+    }
+
+    await t.commit();
 
     const hospedeAtualizado = await Hospede.findByPk(id);
 
@@ -235,6 +261,7 @@ export const atualizarHospede = async (req, res) => {
     }));
 
   } catch (error) {
+    await t.rollback();
     return res.status(500).json(respostaHelper({
       status: 500,
       message: 'Erro ao atualizar hóspede.',
@@ -242,6 +269,7 @@ export const atualizarHospede = async (req, res) => {
     }));
   }
 };
+
 
 /**
  * Deleta um hóspede do banco de dados e desassocia-o do quarto.
