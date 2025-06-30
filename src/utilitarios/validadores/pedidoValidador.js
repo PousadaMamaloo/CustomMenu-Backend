@@ -3,9 +3,7 @@ import Item from '../../modelos/item.js';
 import Evento from '../../modelos/evento.js';
 import Quarto from '../../modelos/quarto.js';
 
-// Validador para CRIAÇÃO de pedido (POST)
 export const pedidoValidadorCriar = [
-  // ID do quarto
   body('id_quarto')
     .isInt({ min: 1 }).withMessage('Informe um id_quarto válido.')
     .custom(async (id_quarto) => {
@@ -14,7 +12,6 @@ export const pedidoValidadorCriar = [
       return true;
     }),
 
-  // ID do evento
   body('id_evento')
     .isInt({ min: 1 }).withMessage('Informe um id_evento válido.')
     .custom(async (id_evento) => {
@@ -23,11 +20,9 @@ export const pedidoValidadorCriar = [
       return true;
     }),
 
-  // Array de itens
   body('itens')
     .isArray({ min: 1 }).withMessage('O pedido deve conter pelo menos um item.'),
 
-  // Cada item: id_item e qntd_item
   body('itens.*.id_item')
     .isInt({ min: 1 }).withMessage('id_item de cada item deve ser um inteiro válido.')
     .custom(async (id_item) => {
@@ -39,7 +34,6 @@ export const pedidoValidadorCriar = [
   body('itens.*.qntd_item')
     .isInt({ min: 1 }).withMessage('A quantidade deve ser um inteiro positivo.')
     .custom(async (qntd_item, { req, path }) => {
-      // Captura o índice do item
       const index = Number(path.match(/\d+/)[0]);
       const id_item = req.body.itens[index]?.id_item;
       const item = await Item.findByPk(id_item);
@@ -47,17 +41,18 @@ export const pedidoValidadorCriar = [
         throw new Error(`Quantidade para "${item.nome_item}" excede o limite de ${item.qntd_max_hospede}.`);
       }
       return true;
-    })
+    }),
+
+  body('obs_pedido')
+    .optional()
+    .isString().withMessage('A observação deve ser uma string.')
+    .isLength({ max: 300 }).withMessage('A observação deve ter no máximo 300 caracteres.')
 ];
 
-// Validador para ATUALIZAÇÃO de pedido (PUT)
-// Só valida os itens!
 export const pedidoValidadorAtualizar = [
-  // Array de itens
   body('itens')
     .isArray({ min: 1 }).withMessage('O pedido deve conter pelo menos um item.'),
 
-  // Cada item: id_item e qntd_item
   body('itens.*.id_item')
     .isInt({ min: 1 }).withMessage('id_item de cada item deve ser um inteiro válido.')
     .custom(async (id_item) => {
@@ -69,7 +64,6 @@ export const pedidoValidadorAtualizar = [
   body('itens.*.qntd_item')
     .isInt({ min: 1 }).withMessage('A quantidade deve ser um inteiro positivo.')
     .custom(async (qntd_item, { req, path }) => {
-      // Captura o índice do item
       const index = Number(path.match(/\d+/)[0]);
       const id_item = req.body.itens[index]?.id_item;
       const item = await Item.findByPk(id_item);
@@ -77,5 +71,10 @@ export const pedidoValidadorAtualizar = [
         throw new Error(`Quantidade para "${item.nome_item}" excede o limite de ${item.qntd_max_hospede}.`);
       }
       return true;
-    })
+    }),
+
+  body('obs_pedido')
+    .optional()
+    .isString().withMessage('A observação deve ser uma string.')
+    .isLength({ max: 300 }).withMessage('A observação deve ter no máximo 300 caracteres.')
 ];

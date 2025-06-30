@@ -19,7 +19,7 @@ const autenticadorOpcional = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || "seu-segredo-jwt");
-    req.user = decoded; // Se for válido, anexa o usuário.
+    req.user = decoded;
   } catch (error) {
     console.warn("Token inválido ou expirado ignorado durante a validação opcional.");
   }
