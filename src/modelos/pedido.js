@@ -1,5 +1,6 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/database.js';
+import Horario from './horario.js';
 
 const Pedido = sequelize.define('Pedido', {
     id_pedido: {
@@ -18,9 +19,13 @@ const Pedido = sequelize.define('Pedido', {
         type: DataTypes.DATEONLY,
         defaultValue: DataTypes.NOW
     },
-    horario_cafe_manha: {
-        type: DataTypes.TIME,
-        allowNull: true
+    id_horario: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: Horario,
+            key: 'id_horario'
+        }
     },
     obs_pedido: {
         type: DataTypes.STRING(300),
@@ -31,5 +36,7 @@ const Pedido = sequelize.define('Pedido', {
     schema: 'mamaloo',
     timestamps: false
 });
+
+Pedido.belongsTo(Horario, { foreignKey: 'id_horario' });
 
 export default Pedido;

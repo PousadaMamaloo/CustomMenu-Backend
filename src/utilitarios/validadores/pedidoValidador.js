@@ -2,6 +2,7 @@ import { body } from 'express-validator';
 import Item from '../../modelos/item.js';
 import Evento from '../../modelos/evento.js';
 import Quarto from '../../modelos/quarto.js';
+import Horario from '../../modelos/horario.js';
 
 export const pedidoValidadorCriar = [
   body('id_quarto')
@@ -19,6 +20,14 @@ export const pedidoValidadorCriar = [
       if (!evento || !evento.sts_evento) throw new Error('Evento inexistente ou inativo.');
       return true;
     }),
+  
+  body('id_horario')
+  .isInt({ min: 1 }).withMessage('Informe um id_horario válido.')
+  .custom(async (id_horario) => {
+    const horario = await Horario.findByPk(id_horario);
+    if (!horario) throw new Error('Horário não encontrado.');
+    return true;
+  }),
 
   body('itens')
     .isArray({ min: 1 }).withMessage('O pedido deve conter pelo menos um item.'),
@@ -60,6 +69,14 @@ export const pedidoValidadorAtualizar = [
       if (!item) throw new Error(`Item não encontrado: id_item=${id_item}`);
       return true;
     }),
+
+  body('id_horario')
+  .isInt({ min: 1 }).withMessage('Informe um id_horario válido.')
+  .custom(async (id_horario) => {
+    const horario = await Horario.findByPk(id_horario);
+    if (!horario) throw new Error('Horário não encontrado.');
+    return true;
+  }),
 
   body('itens.*.qntd_item')
     .isInt({ min: 1 }).withMessage('A quantidade deve ser um inteiro positivo.')
