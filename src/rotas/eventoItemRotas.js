@@ -12,7 +12,7 @@ const router = express.Router();
 
 router.use(autenticador);
 
-router.get('/:id', listarItensPorEvento);
+router.get('/:id_evento', listarItensPorEvento);
 router.post('/', autorizaAdministrador, eventoItemValidador, validarRequisicao, associarItemEvento);
 router.get('/', autorizaAdministrador, listarAssociacoes);
 
