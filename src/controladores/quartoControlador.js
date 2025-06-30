@@ -1,8 +1,8 @@
 import Quarto from '../modelos/quarto.js';
 import { respostaHelper } from '../utilitarios/helpers/respostaHelper.js';
 import { validationResult } from 'express-validator';
-import { sequelize } from '../config/database.js';
-import { EventoQuarto } from '../models/eventoQuarto.js';
+import sequelize from '../config/database.js';
+import EventoQuarto from '../modelos/eventoQuarto.js';
 
 export const criarQuarto = async (req, res) => {
   const erros = validationResult(req);
