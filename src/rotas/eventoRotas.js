@@ -30,10 +30,6 @@ router.get('/hoje', autorizaAdministrador, listarItensEventosHoje);
 
 export default router;
 
-
 router.get("/hospede", listarEventosHospede);
 
-
-
 router.get("/:id", autorizaAdministrador, listarEventoPorId);
-

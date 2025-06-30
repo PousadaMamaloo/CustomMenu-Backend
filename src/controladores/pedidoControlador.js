@@ -17,12 +17,17 @@ export const criarPedido = async (req, res) => {
       errors: erros.array()
     }));
   }
-  const { id_quarto, id_evento, itens, horario_cafe_manha } = req.body;
+  const { id_quarto, id_evento, itens, horario_cafe_manha, obs_pedido } = req.body;
   try {
     const agora = new Date();
-    const novoPedido = await Pedido.create({ id_quarto, id_evento, data_pedido: agora, horario_cafe_manha });
+    const novoPedido = await Pedido.create({
+      id_quarto,
+      id_evento,
+      data_pedido: agora,
+      horario_cafe_manha,
+      obs_pedido
+    });
 
-    
     for (const it of itens) {
       await itemPedido.create({
         id_pedido: novoPedido.id_pedido,
@@ -44,7 +49,6 @@ export const criarPedido = async (req, res) => {
     }));
   }
 };
-
 
 export const obterPedido = async (req, res) => {
   try {
@@ -68,7 +72,6 @@ export const obterPedido = async (req, res) => {
       }));
     }
 
-    
     const itens = pedido.Items.map(it => ({
       id_item: it.id_item,
       nome: it.nome_item,
@@ -97,7 +100,6 @@ export const obterPedido = async (req, res) => {
     }));
   }
 };
-
 
 export const atualizarPedido = async (req, res) => {
   const erros = validationResult(req);

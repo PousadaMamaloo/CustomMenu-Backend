@@ -41,7 +41,6 @@ Evento.belongsToMany(Item, {
 Pedido.belongsTo(Evento, { foreignKey: 'id_evento' });
 Evento.hasMany(Pedido, { foreignKey: 'id_evento' });
 
-// Evento <-> Quarto
 Evento.belongsToMany(Quarto, {
   through: EventoQuarto,
   foreignKey: 'id_evento',
@@ -53,7 +52,6 @@ Quarto.belongsToMany(Evento, {
   otherKey: 'id_evento'
 });
 
-// Evento <-> Data (relacionamento com datas específicas)
 Evento.hasMany(EventoData, {
   foreignKey: 'id_evento'
 });

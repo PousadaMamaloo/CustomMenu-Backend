@@ -1,17 +1,13 @@
 import Hospede from '../modelos/hospede.js';
 import Quarto from '../modelos/quarto.js';
-import sequelize from '../config/database.js'; // Importa a instância do sequelize para usar transações
+import sequelize from '../config/database.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { respostaHelper } from '../utilitarios/helpers/respostaHelper.js';
 
-// Constantes para configuração do JWT
 const JWT_SECRET = process.env.JWT_SECRET || 'seu-segredo-jwt';
 const JWT_EXPIRES = '1d';
 
-/**
- * Realiza o login do hóspede com base no número do quarto e telefone.
- */
 export const loginHospede = async (req, res) => {
   const { num_quarto, telef_hospede } = req.body;
 

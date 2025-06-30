@@ -586,14 +586,12 @@ export const listarItensEventosHoje = async (req, res) => {
     try {
         const hoje = new Date();
         hoje.setHours(0, 0, 0, 0);
-        const dataHoje = hoje.toISOString().split('T')[0]; // formato 'YYYY-MM-DD'
+        const dataHoje = hoje.toISOString().split('T')[0];
 
-        // 1. Buscar eventos recorrentes
         const eventosRecorrentes = await Evento.findAll({
             where: { recorrencia: true }
         });
 
-        // 2. Buscar eventos NÃO recorrentes com data = hoje
         const eventoDatasHoje = await EventoData.findAll({
             where: { data_evento: dataHoje }
         });
@@ -606,7 +604,6 @@ export const listarItensEventosHoje = async (req, res) => {
             }
         });
 
-        // 3. Junta todos os eventos do dia
         const eventosHoje = [...eventosRecorrentes, ...eventosNaoRecorrentes];
         const idsEventosHoje = eventosHoje.map(ev => ev.id_evento);
 
@@ -618,7 +615,6 @@ export const listarItensEventosHoje = async (req, res) => {
             }));
         }
 
-        // 4. Buscar pedidos dos eventos do dia, com data igual a hoje
         const pedidosHoje = await Pedido.findAll({
             where: {
                 id_evento: { [Op.in]: idsEventosHoje },
@@ -630,12 +626,9 @@ export const listarItensEventosHoje = async (req, res) => {
             }]
         });
 
-        // 5. Montar relatório por evento
         let relatorio = [];
         for (const evento of eventosHoje) {
-            // Filtra pedidos do evento do dia
             const pedidosEvento = pedidosHoje.filter(p => p.id_evento === evento.id_evento);
-            // Mapa para acumular itens
             let itensEvento = {};
 
             pedidosEvento.forEach(pedido => {
@@ -650,7 +643,6 @@ export const listarItensEventosHoje = async (req, res) => {
                             valor_total: 0
                         };
                     }
-                    // qntd_item está no relacionamento ItemPedido
                     const qntd = (item.ItemPedido?.qntd_item ||
                         item.itemPedido?.qntd_item ||
                         item.item_pedido?.qntd_item ||

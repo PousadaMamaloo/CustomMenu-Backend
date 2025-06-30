@@ -22,6 +22,10 @@ const Pedido = sequelize.define('Pedido', {
         type: DataTypes.TIME,
         allowNull: true
     },
+    obs_pedido: {
+        type: DataTypes.STRING(300),
+        allowNull: true
+    },
 }, {
     tableName: 'tab_pedido',
     schema: 'mamaloo',

@@ -141,7 +141,7 @@ export const validarToken = async (req, res) => {
     return res.status(200).json(respostaHelper({
       status: 200,
       message: "Token JWT válido.",
-      data: { usuario: req.user } // req.user contém o payload do token
+      data: { usuario: req.user }
     }));
 
   } catch (error) {

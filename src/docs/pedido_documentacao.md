@@ -11,7 +11,8 @@
   {
     "id_quarto": "number",
     "id_evento": "number",
-    "horario_cafe_manha": "HH:MM", 
+    "horario_cafe_manha": "HH:MM",
+    "obs_pedido": "string (opcional, até 300 caracteres)",
     "itens": [
       {
         "id_item": "number",
