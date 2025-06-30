@@ -91,17 +91,17 @@
   - `500 Internal Server Error`: Erro interno do servidor.
 
 ### 5. Deletar Quarto
-- **Caminho:** `/api/quartos/:num`
+- **Caminho:** `/api/quartos/:num` num = número do quarto
 - **Método HTTP:** `DELETE`
 - **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
-- **Descrição:** Deleta um quarto existente pelo seu número.
+- **Descrição:** Exclui um quarto existente pelo seu número. Caso o quarto esteja associado a algum evento, a associação é removida automaticamente antes da exclusão do quarto.
 - **Parâmetros de Caminho:**
   - `num`: Número do quarto (string).
 - **Respostas:**
   - `200 OK`: Quarto deletado com sucesso.
     ```json
     {
-      "mensagem": "Quarto deletado com sucesso!"
+      "mensagem": "Quarto excluído com sucesso!"
     }
     ```
   - `404 Not Found`: Quarto não encontrado.

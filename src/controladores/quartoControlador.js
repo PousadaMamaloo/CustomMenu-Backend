@@ -1,6 +1,8 @@
 import Quarto from '../modelos/quarto.js';
 import { respostaHelper } from '../utilitarios/helpers/respostaHelper.js';
 import { validationResult } from 'express-validator';
+import { sequelize } from '../config/database.js';
+import { EventoQuarto } from '../models/eventoQuarto.js';
 
 export const criarQuarto = async (req, res) => {
   const erros = validationResult(req);
@@ -117,25 +119,37 @@ export const atualizarQuarto = async (req, res) => {
 };
 
 export const deletarQuarto = async (req, res) => {
+  const t = await sequelize.transaction();
   try {
     const { num } = req.params;
+    const quarto = await Quarto.findOne({ where: { num_quarto: num }, transaction: t });
 
-    const linhasRemovidas = await Quarto.destroy({
-      where: { num_quarto: num }
-    });
-
-    if (linhasRemovidas === 0) {
+    if (!quarto) {
+      await t.rollback();
       return res.status(404).json(respostaHelper({
         status: 404,
         message: 'Quarto não encontrado para exclusão.'
       }));
     }
 
+    // Remove associações com eventos
+    await EventoQuarto.destroy({
+      where: { id_quarto: quarto.id_quarto },
+      transaction: t
+    });
+
+    await Quarto.destroy({
+      where: { num_quarto: num },
+      transaction: t
+    });
+
+    await t.commit();
     return res.status(200).json(respostaHelper({
       status: 200,
       message: 'Quarto excluído com sucesso!'
     }));
   } catch (err) {
+    await t.rollback();
     return res.status(500).json(respostaHelper({
       status: 500,
       message: 'Erro ao excluir quarto.',
