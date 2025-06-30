@@ -6,40 +6,62 @@ Este documento detalha os relacionamentos entre as entidades do banco de dados u
 
 O banco de dados do CustomMenu-Backend é composto por diversas tabelas que se interligam para gerenciar informações sobre quartos, hóspedes, administradores, itens e eventos. Os principais relacionamentos identificados são:
 
-- **Quarto e Hóspede:** Um quarto pode ter um hóspede responsável, e um hóspede pode estar associado a um quarto.
-- **Evento e Item:** Um evento pode conter múltiplos itens, e um item pode estar presente em múltiplos eventos. Este é um relacionamento muitos-para-muitos.
+- **Quarto e Hóspede:** Um quarto pode ter um hóspede responsável, e um hóspede pode estar associado a um ou mais quartos.
+- **Evento e Item:** Um evento pode conter múltiplos itens, e um item pode estar presente em múltiplos eventos. Relacionamento muitos-para-muitos.
+- **Evento e Quarto:** Um evento pode estar vinculado a vários quartos, e um quarto pode estar associado a vários eventos.
+- **Evento e Data:** Um evento pode ocorrer em uma ou mais datas específicas.
+- **Evento e Horário:** Um evento pode ocorrer em um ou mais horários específicos.
+- **Pedido e Item:** Cada pedido pode conter vários itens, e cada item pode aparecer em vários pedidos. Muitos-para-muitos com quantidade.
 
 ## Detalhamento dos Relacionamentos
 
-### 1. Quarto e Hóspede (Um-para-Um ou Um-para-Muitos)
+### 1. Quarto e Hóspede (Um-para-Um ou Um-para-Muitos no caso de um hóspede ser responsável por mais de um quarto
 
-Embora o modelo `Quarto` contenha `id_hospede_responsavel` que referencia `tab_hospede`, o relacionamento mais comum para esta estrutura é de um Quarto ter um Hóspede Responsável, e um Hóspede poder ser responsável por um ou mais Quartos (se o `id_hospede_responsavel` for único por quarto, é um-para-um; se um hóspede puder ser responsável por vários quartos, é um-para-muitos).
-
-- **Tabela Principal:** `tab_quarto` (Quarto)
-- **Tabela Relacionada:** `tab_hospede` (Hóspede)
-- **Chave Estrangeira:** `id_hospede_responsavel` na tabela `tab_quarto` referencia `id_hospede` na tabela `tab_hospede`.
-- **Descrição:** Este relacionamento indica qual hóspede é o responsável por um determinado quarto. Isso pode ser útil para rastrear a ocupação ou a administração de quartos por hóspedes específicos.
+- **Tabela Principal:** `tab_quarto`
+- **Tabela Relacionada:** `tab_hospede`
+- **Chave Estrangeira:** `id_hospede_responsavel`
+- **Descrição:** Indica qual hóspede é o responsável por determinado quarto.
 
 ### 2. Evento e Item (Muitos-para-Muitos)
 
-Os modelos `Evento` e `Item` possuem um relacionamento muitos-para-muitos, o que significa que um evento pode ter vários itens associados a ele, e um item pode ser associado a vários eventos. Este relacionamento é gerenciado por uma tabela intermediária (`tab_re_evento_item` ou `EventoItem`).
+- **Tabelas:** `tab_evento` ↔ `tab_item`
+- **Tabela Intermediária:** `tab_re_evento_item`
+- **Descrição:** Permite associar múltiplos itens a eventos.
 
-- **Tabela Principal 1:** `tab_evento` (Evento)
-- **Tabela Principal 2:** `tab_item` (Item)
-- **Tabela Intermediária:** `tab_re_evento_item` (EventoItem)
-- **Chaves Estrangeiras na Tabela Intermediária:**
-  - `id_evento` referencia `id_evento` na tabela `tab_evento`.
-  - `id_item` referencia `id_item` na tabela `tab_item`.
-- **Descrição:** Este relacionamento permite que a aplicação associe itens específicos a eventos. Por exemplo, um evento de café da manhã pode ter itens como 
+### 3. Evento e Quarto (Muitos-para-Muitos)
 
+- **Tabelas:** `tab_evento` ↔ `tab_quarto`
+- **Tabela Intermediária:** `tab_re_evento_quarto`
+- **Descrição:** Define os quartos participantes de um evento.
 
-café, pão e frutas, e esses mesmos itens podem ser usados em outros eventos. A tabela `tab_re_evento_item` armazena essas associações.
+### 4. Evento e Data (Um-para-Muitos)
 
-### 3. Administrador
+- **Tabela Principal:** `tab_evento`
+- **Tabela Relacionada:** `tab_re_evento_data`
+- **Descrição:** Representa as datas específicas em que o evento ocorrerá.
 
-O modelo `Administrador` é uma entidade independente, sem relacionamentos diretos com outras tabelas no esquema atual, servindo principalmente para autenticação e autorização de usuários com privilégios administrativos.
+### 5. Evento e Horário (Muitos-para-Muitos)
 
-- **Tabela:** `tab_administrador` (Administrador)
-- **Descrição:** Armazena informações sobre os administradores do sistema, como credenciais de login. Não possui chaves estrangeiras que referenciem outras tabelas, nem outras tabelas a referenciam diretamente.
+- **Tabela Principal:** `tab_evento`
+- **Tabela Intermediária:** `tab_re_evento_horario`
+- **Descrição:** Relacionamento entre eventos e horários do dia em que ocorrem. Permite múltiplos horários por evento.
 
+### 6. Pedido e Item (Muitos-para-Muitos com Quantidade)
 
+- **Tabela Intermediária:** `tab_re_item_pedido`
+- **Chaves Estrangeiras:**
+  - `id_pedido` → `tab_pedido`
+  - `id_item` → `tab_item`
+- **Descrição:** Associa itens a pedidos com controle de quantidade e preço.
+
+### 7. Pedido e Evento (Muitos-para-Um)
+
+- **Tabela:** `tab_pedido`
+- **Chave Estrangeira:** `id_evento`
+- **Descrição:** Relaciona um pedido a um evento específico.
+
+### 8. Pedido e Quarto
+
+- **Tabela:** `tab_pedido`
+- **Chave Estrangeira:** `id_quarto`
+- **Descrição:** Indica o quarto responsável por um pedido.

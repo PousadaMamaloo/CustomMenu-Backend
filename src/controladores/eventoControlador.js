@@ -9,6 +9,8 @@ import EventoQuarto from '../modelos/eventoQuarto.js';
 import Quarto from '../modelos/quarto.js';
 import Pedido from '../modelos/pedido.js';
 import ItemPedido from '../modelos/itemPedido.js';
+import EventoItem from '../modelos/eventoItem.js';
+import EventoHorario from '../modelos/eventoHorario.js';
 import { Op } from 'sequelize';
 
 export const listarEventos = async (req, res) => {
@@ -417,47 +419,87 @@ export const atualizarEvento = async (req, res) => {
     }
 };
 
-
 export const excluirEvento = async (req, res) => {
     const { id } = req.params;
-    const t = await sequelize.transaction();
-
+    const t = await sequelize.transaction(); 
+  
     try {
-        const evento = await Evento.findByPk(id, { transaction: t });
-        if (!evento) {
-            await t.rollback();
-            return res.status(404).json(respostaHelper({
-                status: 404,
-                mensagem: 'Evento não encontrado.'
-            }));
-        }
-
-
-        await sequelize.query(`
-            DELETE FROM mamaloo.tab_re_evento_horario WHERE id_evento = :id_evento
-        `, { replacements: { id_evento: id }, transaction: t });
-
-
-
-        await evento.destroy({ transaction: t });
-
-        await t.commit();
-
-        return res.status(200).json(respostaHelper({
-            status: 200,
-            mensagem: 'Evento excluído com sucesso.'
-        }));
-    } catch (err) {
+      const evento = await Evento.findByPk(id, { transaction: t });
+  
+      if (!evento) {
         await t.rollback();
-        console.error(`Erro ao excluir evento ${id}:`, err);
-        return res.status(500).json(respostaHelper({
-            status: 500,
-            mensagem: 'Erro ao excluir evento.',
-            errors: [err.message]
-        }));
-    }
-};
+        return res.status(404).json({
+          status: 404,
+          mensagem: 'Evento não encontrado.',
+        });
+      }
+  
+      // Busca todos os pedidos associados ao evento
+      const pedidos = await Pedido.findAll({
+        where: { id_evento: id },
+        transaction: t
+      });
+  
+      // Para cada pedido relacionado ao evento...
+      for (const pedido of pedidos) {
+        // ...remove os itens associados ao pedido (tab_re_item_pedido)
+        await ItemPedido.destroy({
+          where: { id_pedido: pedido.id_pedido },
+          transaction: t
+        });
+      }
+  
+      // Após remover os itens dos pedidos, exclui os próprios pedidos
+      await Pedido.destroy({
+        where: { id_evento: id },
+        transaction: t
+      });
+  
+      // Remove os vínculos do evento com os itens (tab_re_evento_item)
+      await EventoItem.destroy({
+        where: { id_evento: id },
+        transaction: t
+      });
+  
+      // Remove os vínculos do evento com quartos específicos (tab_re_evento_quarto)
+      await EventoQuarto.destroy({
+        where: { id_evento: id },
+        transaction: t
+      });
+  
+      // Remove as datas específicas associadas ao evento (tab_re_evento_data)
+      await EventoData.destroy({
+        where: { id_evento: id },
+        transaction: t
+      });
 
+      await EventoHorario.destroy({
+        where: { id_evento: id },
+        transaction: t
+      });
+      
+  
+      // Por fim, exclui o próprio evento
+      await evento.destroy({ transaction: t });
+  
+      await t.commit();
+  
+      return res.status(200).json({
+        status: 200,
+        mensagem: 'Evento excluído com sucesso.',
+      });
+  
+    } catch (err) {
+      await t.rollback();
+      console.error(`Erro ao excluir evento:`, err);
+  
+      return res.status(500).json({
+        status: 500,
+        mensagem: 'Erro interno ao excluir evento.',
+        errors: [err.message]
+      });
+    }
+};  
 
 export const listarEventosHospede = async (req, res) => {
     try {
