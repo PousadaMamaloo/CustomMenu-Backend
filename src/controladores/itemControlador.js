@@ -1,8 +1,11 @@
-import Item from '../modelos/item.js';
 import { Op } from 'sequelize';
 import { respostaHelper } from '../utilitarios/helpers/respostaHelper.js';
 import { validationResult } from 'express-validator';
 import sharp from 'sharp';
+import Item from '../modelos/item.js';
+import EventoItem from '../modelos/eventoItem.js';
+import ItemPedido from '../modelos/itemPedido.js';
+import sequelize from '../config/database.js';
 
 async function comprimirImagemBase64(foto_item) {
   if (foto_item && foto_item.startsWith('data:image/')) {
@@ -120,33 +123,42 @@ export const atualizarItem = async (req, res) => {
   }
 };
 
-export const excluirItem = async (req, res) => {
-  try {
-    const { id } = req.params;
+export async function excluirItem(req, res) {
+  const id = req.params.id;
+  const transacao = await sequelize.transaction();
 
+  try {
     const item = await Item.findByPk(id);
     if (!item) {
-      return res.status(404).json(respostaHelper({
-        status: 404,
-        message: 'Item não encontrado.'
-      }));
+      return res.status(404).json({ mensagem: 'Item não encontrado.' });
     }
 
-    await item.destroy();
+    // Remove associações com pedidos
+    await ItemPedido.destroy({
+      where: { id_item: id },
+      transaction: transacao
+    });
 
-    return res.status(200).json(respostaHelper({
-      status: 200,
-      message: 'Item excluído com sucesso!'
-    }));
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json(respostaHelper({
-      status: 500,
-      message: 'Erro ao excluir item.',
-      errors: err.message
-    }));
+    // Remove associações com eventos
+    await EventoItem.destroy({
+      where: { id_item: id },
+      transaction: transacao
+    });
+
+    await item.destroy({ transaction: transacao });
+    await transacao.commit();
+
+    res.status(200).json({ mensagem: 'Item excluído com sucesso!' });
+    
+  } catch (erro) {
+    await transacao.rollback();
+    console.error('Erro ao excluir item:', erro);
+    res.status(500).json({
+      mensagem: 'Erro interno ao excluir item.',
+      errors: [erro.message || 'Erro desconhecido']
+    });
   }
-};
+}
 
 export const listarCategoriasUnicas = async (req, res) => {
   try {
