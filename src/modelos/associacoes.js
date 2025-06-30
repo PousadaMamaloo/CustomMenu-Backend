@@ -6,7 +6,8 @@ import ItemPedido from './itemPedido.js';
 import Quarto from './quarto.js';
 import EventoQuarto from './eventoQuarto.js';
 import EventoData from './eventoData.js';
-import Horario from './horario.js';
+import EventoHorario from './eventoHorario.js';
+import Horario from './horario.js'; 
 
 Evento.belongsToMany(Item, {
   through: EventoItem,
@@ -65,3 +66,15 @@ Pedido.belongsTo(Quarto, {
 
 Pedido.belongsTo(Horario, { foreignKey: 'id_horario' });
 Horario.hasMany(Pedido, { foreignKey: 'id_horario' });
+
+Evento.belongsToMany(Horario, {
+  through: EventoHorario,
+  foreignKey: 'id_evento',
+  otherKey: 'id_horario',
+});
+
+Horario.belongsToMany(Evento, {
+  through: EventoHorario,
+  foreignKey: 'id_horario',
+  otherKey: 'id_evento',
+});
