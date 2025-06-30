@@ -256,8 +256,7 @@ export const atualizarHospede = async (req, res) => {
 
     return res.status(200).json(respostaHelper({
       status: 200,
-      message: 'Hóspede atualizado com sucesso.',
-      data: hospedeAtualizado
+      message: 'Hóspede atualizado com sucesso.'
     }));
 
   } catch (error) {
