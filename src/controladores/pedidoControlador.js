@@ -1,12 +1,18 @@
+import { Op } from 'sequelize';
+import { validationResult } from 'express-validator';
+import sequelize from '../config/database.js'; // Importar a instância do sequelize para usar transações
+
+// Modelos
 import Pedido from '../modelos/pedido.js';
 import Item from '../modelos/item.js';
 import itemPedido from '../modelos/itemPedido.js';
 import Evento from '../modelos/evento.js';
 import Quarto from '../modelos/quarto.js';
 import EventoData from '../modelos/eventoData.js';
+
+// Utilitários
 import { respostaHelper } from '../utilitarios/helpers/respostaHelper.js';
-import { validationResult } from 'express-validator';
-import { Op } from 'sequelize'
+
 
 export const criarPedido = async (req, res) => {
   const erros = validationResult(req);
@@ -19,6 +25,9 @@ export const criarPedido = async (req, res) => {
   }
 
   const { id_quarto, id_evento, id_horario, itens, obs_pedido } = req.body;
+  
+  // Envolver a criação em uma transação é uma boa prática também
+  const t = await sequelize.transaction();
 
   try {
     const agora = new Date();
@@ -28,15 +37,18 @@ export const criarPedido = async (req, res) => {
       id_horario,
       data_pedido: agora,
       obs_pedido
-    });
+    }, { transaction: t });
 
-    for (const it of itens) {
-      await itemPedido.create({
-        id_pedido: novoPedido.id_pedido,
-        id_item: it.id_item,
-        qntd_item: it.qntd_item
-      });
-    }
+    // Usando bulkCreate para performance
+    const itensParaCriar = itens.map(it => ({
+      id_pedido: novoPedido.id_pedido,
+      id_item: it.id_item,
+      qntd_item: it.qntd_item
+    }));
+    
+    await itemPedido.bulkCreate(itensParaCriar, { transaction: t });
+    
+    await t.commit();
 
     return res.status(201).json(respostaHelper({
       status: 201,
@@ -44,6 +56,8 @@ export const criarPedido = async (req, res) => {
       data: { id_pedido: novoPedido.id_pedido }
     }));
   } catch (err) {
+    await t.rollback();
+    console.error('Erro ao criar pedido:', err);
     return res.status(500).json(respostaHelper({
       status: 500,
       message: 'Erro ao criar pedido.',
@@ -89,12 +103,14 @@ export const obterPedido = async (req, res) => {
         id_pedido: pedido.id_pedido,
         evento: pedido.Evento ? pedido.Evento.nome_evento : null,
         data_pedido: pedido.data_pedido,
-        horario_cafe_manha: pedido.horario_cafe_manha,
+        id_horario: pedido.id_horario,
+        obs_pedido: pedido.obs_pedido,
         itens
       },
       message: 'Pedido encontrado com sucesso.'
     }));
   } catch (err) {
+    console.error('Erro ao buscar pedido:', err);
     return res.status(500).json(respostaHelper({
       status: 500,
       message: 'Erro ao buscar pedido.',
@@ -112,33 +128,50 @@ export const atualizarPedido = async (req, res) => {
       errors: erros.array()
     }));
   }
+
   const { idPedido } = req.params;
-  const { itens } = req.body;
+  const { itens, id_horario, obs_pedido } = req.body;
+
+  const t = await sequelize.transaction();
+
   try {
-    const pedido = await Pedido.findByPk(idPedido);
+    const pedido = await Pedido.findByPk(idPedido, { transaction: t });
     if (!pedido) {
+      await t.rollback(); // Desfaz a transação
       return res.status(404).json(respostaHelper({
         status: 404,
         message: 'Pedido não encontrado.'
       }));
     }
 
-    
+    pedido.id_horario = id_horario || pedido.id_horario;
+    pedido.obs_pedido = obs_pedido !== undefined ? obs_pedido : pedido.obs_pedido; 
 
-    await itemPedido.destroy({ where: { id_pedido: idPedido } });
-    for (const it of itens) {
-      await itemPedido.create({
+    await pedido.save({ transaction: t });
+
+    if (itens && itens.length > 0) {
+      await itemPedido.destroy({ where: { id_pedido: idPedido }, transaction: t });
+
+      const novosItens = itens.map(it => ({
         id_pedido: idPedido,
         id_item: it.id_item,
         qntd_item: it.qntd_item
-      });
+      }));
+
+      await itemPedido.bulkCreate(novosItens, { transaction: t });
     }
+
+    // Se tudo deu certo, confirma as alterações no banco de dados.
+    await t.commit();
 
     return res.status(200).json(respostaHelper({
       status: 200,
       message: 'Pedido atualizado com sucesso.'
     }));
   } catch (err) {
+    // Se qualquer erro ocorreu, desfaz todas as operações.
+    await t.rollback();
+    console.error('Erro ao atualizar pedido:', err); // Logar o erro para depuração
     return res.status(500).json(respostaHelper({
       status: 500,
       message: 'Erro ao atualizar pedido.',
@@ -147,24 +180,31 @@ export const atualizarPedido = async (req, res) => {
   }
 };
 
-
 export const deletarPedido = async (req, res) => {
   const { idPedido } = req.params;
+  const t = await sequelize.transaction();
   try {
-    const pedido = await Pedido.findByPk(idPedido);
+    const pedido = await Pedido.findByPk(idPedido, { transaction: t });
     if (!pedido) {
+      await t.rollback();
       return res.status(404).json(respostaHelper({
         status: 404,
         message: 'Pedido não encontrado.'
       }));
     }
-    await itemPedido.destroy({ where: { id_pedido: idPedido } });
-    await pedido.destroy();
+    // A deleção dos itens em cascata deve ser configurada no modelo (onDelete: 'CASCADE')
+    // Mas para garantir, podemos fazer manualmente dentro da transação.
+    await itemPedido.destroy({ where: { id_pedido: idPedido }, transaction: t });
+    await pedido.destroy({ transaction: t });
+    
+    await t.commit();
+
     return res.status(200).json(respostaHelper({
       status: 200,
       message: 'Pedido excluído com sucesso.'
     }));
   } catch (err) {
+    await t.rollback();
     return res.status(500).json(respostaHelper({
       status: 500,
       message: 'Erro ao excluir pedido.',
@@ -172,7 +212,6 @@ export const deletarPedido = async (req, res) => {
     }));
   }
 };
-
 
 export const listarPedidosPorQuarto = async (req, res) => {
   const { numQuarto } = req.params;
@@ -195,7 +234,8 @@ export const listarPedidosPorQuarto = async (req, res) => {
         {
           model: Evento
         }
-      ]
+      ],
+      order: [['data_pedido', 'DESC']]
     });
 
     return res.status(200).json(respostaHelper({
@@ -212,19 +252,16 @@ export const listarPedidosPorQuarto = async (req, res) => {
   }
 };
 
-
 export const listarPedidosEventosAtivos = async (req, res) => {
   try {
     const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0); 
+    hoje.setHours(0, 0, 0, 0);
 
     const pedidos = await Pedido.findAll({
       include: [
         {
           model: Evento,
-          where: {
-            sts_evento: true
-          },
+          where: { sts_evento: true },
           required: true
         },
         {
@@ -239,14 +276,12 @@ export const listarPedidosEventosAtivos = async (req, res) => {
       order: [['data_pedido', 'DESC']]
     });
 
-    
     const pedidosFiltrados = [];
     
     for (const pedido of pedidos) {
       const evento = pedido.Evento;
       let eventoAtivo = false;
 
-      
       if (evento.recorrencia) {
         eventoAtivo = true;
       } else {
@@ -265,7 +300,7 @@ export const listarPedidosEventosAtivos = async (req, res) => {
         pedidosFiltrados.push({
           id_pedido: pedido.id_pedido,
           data_pedido: pedido.data_pedido,
-          horario_cafe_manha: pedido.horario_cafe_manha,
+          id_horario: pedido.id_horario,
           quarto: pedido.Quarto.num_quarto,
           evento: {
             id_evento: evento.id_evento,
@@ -370,7 +405,7 @@ export const relatorioGeralEvento = async (req, res) => {
         id_pedido: pedido.id_pedido,
         data_pedido: pedido.data_pedido,
         quarto: pedido.Quarto.num_quarto,
-        horario_cafe_manha: pedido.horario_cafe_manha,
+        id_horario: pedido.id_horario,
         itens: pedido.Items.map(item => ({
           nome_item: item.nome_item,
           quantidade: item.itemPedido.qntd_item,
@@ -428,7 +463,7 @@ export const historicoComPaginacao = async (req, res) => {
       id_pedido: pedido.id_pedido,
       data_pedido: pedido.data_pedido,
       quarto: pedido.Quarto.num_quarto,
-      horario_cafe_manha: pedido.horario_cafe_manha,
+      id_horario: pedido.id_horario,
       evento: pedido.Evento ? {
         nome_evento: pedido.Evento.nome_evento,
         desc_evento: pedido.Evento.desc_evento
@@ -459,8 +494,6 @@ export const historicoComPaginacao = async (req, res) => {
   }
 };
 
-
-
 export const listarPedidosHoje = async (req, res) => {
   try {
     const hoje = new Date();
@@ -469,10 +502,14 @@ export const listarPedidosHoje = async (req, res) => {
     const amanha = new Date(hoje);
     amanha.setDate(hoje.getDate() + 1);
 
+    // **CORREÇÃO**: A forma correta de buscar por um intervalo de datas.
+    // [Op.gte] significa "greater than or equal to" (>=)
+    // [Op.lt] significa "less than" (<)
     const pedidos = await Pedido.findAll({
       where: {
         data_pedido: {
-          [Op.or]: [hoje, amanha]
+          [Op.gte]: hoje,
+          [Op.lt]: amanha
         }
       },
       include: [
@@ -492,7 +529,7 @@ export const listarPedidosHoje = async (req, res) => {
       id_pedido: pedido.id_pedido,
       data_pedido: pedido.data_pedido,
       quarto: pedido.Quarto.num_quarto,
-      horario_cafe_manha: pedido.horario_cafe_manha,
+      id_horario: pedido.id_horario,
       evento: pedido.Evento ? {
         nome_evento: pedido.Evento.nome_evento,
         desc_evento: pedido.Evento.desc_evento
@@ -514,5 +551,3 @@ export const listarPedidosHoje = async (req, res) => {
     }));
   }
 };
-
-
