@@ -20,7 +20,7 @@ jobs:
 
       - name: Deploy no Servidor via SSH
         run: |
-          ssh -tt -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
             set -e
 
             echo "=>  Acessando o diretório do projeto..."
@@ -31,7 +31,7 @@ jobs:
             git reset --hard origin/main # Mais seguro para automação do que 'git pull'
 
             echo "=>  Recriando os contêineres com a nova versão..."
-            docker-compose --env-file .env down --remove-orphans
+            docker-compose --env-file .env down --remove-orphans -v
             docker-compose --env-file .env up --build -d
 
             echo "=>  Limpando imagens Docker antigas..."
