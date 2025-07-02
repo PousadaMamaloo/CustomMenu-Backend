@@ -26,7 +26,6 @@ export const criarPedido = async (req, res) => {
 
   const { id_quarto, id_evento, id_horario, itens, obs_pedido } = req.body;
   
-  // Envolver a criação em uma transação é uma boa prática também
   const t = await sequelize.transaction();
 
   try {
@@ -39,7 +38,6 @@ export const criarPedido = async (req, res) => {
       obs_pedido
     }, { transaction: t });
 
-    // Usando bulkCreate para performance
     const itensParaCriar = itens.map(it => ({
       id_pedido: novoPedido.id_pedido,
       id_item: it.id_item,
@@ -137,7 +135,7 @@ export const atualizarPedido = async (req, res) => {
   try {
     const pedido = await Pedido.findByPk(idPedido, { transaction: t });
     if (!pedido) {
-      await t.rollback(); // Desfaz a transação
+      await t.rollback();
       return res.status(404).json(respostaHelper({
         status: 404,
         message: 'Pedido não encontrado.'
@@ -145,7 +143,7 @@ export const atualizarPedido = async (req, res) => {
     }
 
     pedido.id_horario = id_horario || pedido.id_horario;
-    pedido.obs_pedido = obs_pedido !== undefined ? obs_pedido : pedido.obs_pedido; 
+    pedido.obs_pedido = obs_pedido !== undefined ? obs_pedido : pedido.obs_pedido;
 
     await pedido.save({ transaction: t });
 
@@ -161,7 +159,6 @@ export const atualizarPedido = async (req, res) => {
       await itemPedido.bulkCreate(novosItens, { transaction: t });
     }
 
-    // Se tudo deu certo, confirma as alterações no banco de dados.
     await t.commit();
 
     return res.status(200).json(respostaHelper({
@@ -169,9 +166,7 @@ export const atualizarPedido = async (req, res) => {
       message: 'Pedido atualizado com sucesso.'
     }));
   } catch (err) {
-    // Se qualquer erro ocorreu, desfaz todas as operações.
     await t.rollback();
-    console.error('Erro ao atualizar pedido:', err); // Logar o erro para depuração
     return res.status(500).json(respostaHelper({
       status: 500,
       message: 'Erro ao atualizar pedido.',
@@ -192,8 +187,6 @@ export const deletarPedido = async (req, res) => {
         message: 'Pedido não encontrado.'
       }));
     }
-    // A deleção dos itens em cascata deve ser configurada no modelo (onDelete: 'CASCADE')
-    // Mas para garantir, podemos fazer manualmente dentro da transação.
     await itemPedido.destroy({ where: { id_pedido: idPedido }, transaction: t });
     await pedido.destroy({ transaction: t });
     
@@ -270,7 +263,8 @@ export const listarPedidosEventosAtivos = async (req, res) => {
         },
         {
           model: Quarto,
-          attributes: ['num_quarto']
+          attributes: ['num_quarto'],
+          required: true 
         }
       ],
       order: [['data_pedido', 'DESC']]
@@ -301,7 +295,7 @@ export const listarPedidosEventosAtivos = async (req, res) => {
           id_pedido: pedido.id_pedido,
           data_pedido: pedido.data_pedido,
           id_horario: pedido.id_horario,
-          quarto: pedido.Quarto.num_quarto,
+          quarto: pedido.Quarto.num_quarto, // Esta linha agora é segura
           evento: {
             id_evento: evento.id_evento,
             nome_evento: evento.nome_evento,
@@ -356,7 +350,8 @@ export const relatorioGeralEvento = async (req, res) => {
         },
         {
           model: Quarto,
-          attributes: ['num_quarto']
+          attributes: ['num_quarto'],
+          required: true // Boa prática adicionar aqui também
         }
       ],
       order: [['data_pedido', 'DESC']]
@@ -449,7 +444,8 @@ export const historicoComPaginacao = async (req, res) => {
         },
         {
           model: Quarto,
-          attributes: ['num_quarto']
+          attributes: ['num_quarto'],
+          required: true 
         }
       ],
       order: [['data_pedido', 'DESC']],
@@ -502,9 +498,6 @@ export const listarPedidosHoje = async (req, res) => {
     const amanha = new Date(hoje);
     amanha.setDate(hoje.getDate() + 1);
 
-    // **CORREÇÃO**: A forma correta de buscar por um intervalo de datas.
-    // [Op.gte] significa "greater than or equal to" (>=)
-    // [Op.lt] significa "less than" (<)
     const pedidos = await Pedido.findAll({
       where: {
         data_pedido: {
@@ -519,7 +512,8 @@ export const listarPedidosHoje = async (req, res) => {
         },
         {
           model: Quarto,
-          attributes: ["num_quarto"]
+          attributes: ["num_quarto"],
+          required: true 
         }
       ],
       order: [["data_pedido", "DESC"]]
