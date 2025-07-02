@@ -1,8 +1,7 @@
 import { Op } from 'sequelize';
 import { validationResult } from 'express-validator';
-import sequelize from '../config/database.js'; // Importar a instância do sequelize para usar transações
+import sequelize from '../config/database.js';
 
-// Modelos
 import Pedido from '../modelos/pedido.js';
 import Item from '../modelos/item.js';
 import itemPedido from '../modelos/itemPedido.js';
@@ -10,9 +9,7 @@ import Evento from '../modelos/evento.js';
 import Quarto from '../modelos/quarto.js';
 import EventoData from '../modelos/eventoData.js';
 
-// Utilitários
 import { respostaHelper } from '../utilitarios/helpers/respostaHelper.js';
-
 
 export const criarPedido = async (req, res) => {
   const erros = validationResult(req);
@@ -67,6 +64,14 @@ export const criarPedido = async (req, res) => {
 export const obterPedido = async (req, res) => {
   try {
     const { idPedido } = req.params;
+
+    if (req.user?.role === 'hospede' && Number(num_quarto) !== Number(req.user.num_quarto)) {
+      return res.status(403).json(respostaHelper({
+        status: 403,
+        message: 'Acesso não autorizado: você só pode consultar pedidos do seu próprio quarto.'
+      }));
+    }
+
     const pedido = await Pedido.findByPk(idPedido, {
       include: [
         {
@@ -117,6 +122,8 @@ export const obterPedido = async (req, res) => {
   }
 };
 
+import Horario from '../modelos/horario.js';
+
 export const atualizarPedido = async (req, res) => {
   const erros = validationResult(req);
   if (!erros.isEmpty()) {
@@ -142,8 +149,21 @@ export const atualizarPedido = async (req, res) => {
       }));
     }
 
-    pedido.id_horario = id_horario || pedido.id_horario;
-    pedido.obs_pedido = obs_pedido !== undefined ? obs_pedido : pedido.obs_pedido;
+    if (id_horario) {
+      const horarioExiste = await Horario.findByPk(id_horario);
+      if (!horarioExiste) {
+        await t.rollback();
+        return res.status(400).json(respostaHelper({
+          status: 400,
+          message: 'Horário informado não existe.'
+        }));
+      }
+      pedido.id_horario = id_horario;
+    }
+
+    if (obs_pedido !== undefined) {
+      pedido.obs_pedido = obs_pedido;
+    }
 
     await pedido.save({ transaction: t });
 
@@ -209,6 +229,13 @@ export const deletarPedido = async (req, res) => {
 export const listarPedidosPorQuarto = async (req, res) => {
   const { numQuarto } = req.params;
   try {
+    if (req.user?.role === 'hospede' && Number(numQuarto) !== Number(req.user.num_quarto)) {
+      return res.status(403).json(respostaHelper({
+        status: 403,
+        message: 'Acesso não autorizado: você só pode consultar pedidos do seu próprio quarto.'
+      }));
+    }
+
     const quarto = await Quarto.findOne({ where: { num_quarto: numQuarto } });
     if (!quarto) {
       return res.status(404).json(respostaHelper({
@@ -295,7 +322,7 @@ export const listarPedidosEventosAtivos = async (req, res) => {
           id_pedido: pedido.id_pedido,
           data_pedido: pedido.data_pedido,
           id_horario: pedido.id_horario,
-          quarto: pedido.Quarto.num_quarto, // Esta linha agora é segura
+          quarto: pedido.Quarto.num_quarto,
           evento: {
             id_evento: evento.id_evento,
             nome_evento: evento.nome_evento,
@@ -351,7 +378,7 @@ export const relatorioGeralEvento = async (req, res) => {
         {
           model: Quarto,
           attributes: ['num_quarto'],
-          required: true // Boa prática adicionar aqui também
+          required: true
         }
       ],
       order: [['data_pedido', 'DESC']]
@@ -545,3 +572,82 @@ export const listarPedidosHoje = async (req, res) => {
     }));
   }
 };
+
+export const obterPedidoEventoQuartoData = async (req, res) => {
+  try {
+    const { id_evento, num_quarto, data_pedido } = req.params;
+
+    if (req.user?.role === 'hospede' && Number(num_quarto) !== Number(req.user.num_quarto)) {
+      return res.status(403).json(respostaHelper({
+        status: 403,
+        message: 'Acesso não autorizado: você só pode consultar pedidos do seu próprio quarto.'
+      }));
+    }
+
+    const quarto = await Quarto.findOne({ where: { num_quarto } });
+    if (!quarto) {
+      return res.status(404).json(respostaHelper({
+        status: 404,
+        message: 'Quarto não encontrado.'
+      }));
+    }
+
+    const pedido = await Pedido.findOne({
+      where: {
+        id_evento,
+        id_quarto: quarto.id_quarto,
+        data_pedido
+      },
+      include: [
+        {
+          model: Item,
+          through: { attributes: ['qntd_item'] }
+        },
+        {
+          model: Evento
+        },
+        {
+          model: Horario
+        }
+      ]
+    });
+
+    if (!pedido) {
+      return res.status(200).json(respostaHelper({
+        status: 200,
+        data: null,
+        message: 'Nenhum pedido existente para esse evento/quarto/data.'
+      }));
+    }
+
+    const itens = pedido.Items.map(it => ({
+      id_item: it.id_item,
+      nome: it.nome_item,
+      quantidade: it.itemPedido.qntd_item,
+      valor_unitario: it.valor_item,
+      valor_total: it.valor_item * it.itemPedido.qntd_item,
+      foto_item: it.foto_item
+    }));
+
+    return res.status(200).json(respostaHelper({
+      status: 200,
+      data: {
+        id_pedido: pedido.id_pedido,
+        evento: pedido.Evento ? pedido.Evento.nome_evento : null,
+        data_pedido: pedido.data_pedido,
+        id_horario: pedido.id_horario,
+        horario: pedido.Horario?.horario || null,
+        obs_pedido: pedido.obs_pedido,
+        itens
+      },
+      message: 'Pedido encontrado com sucesso.'
+    }));
+  } catch (err) {
+    return res.status(500).json(respostaHelper({
+      status: 500,
+      message: 'Erro ao buscar pedido.',
+      errors: [err.message]
+    }));
+  }
+};
+

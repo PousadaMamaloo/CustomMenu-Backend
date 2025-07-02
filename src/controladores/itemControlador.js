@@ -133,13 +133,11 @@ export async function excluirItem(req, res) {
       return res.status(404).json({ mensagem: 'Item não encontrado.' });
     }
 
-    // Remove associações com pedidos
     await ItemPedido.destroy({
       where: { id_item: id },
       transaction: transacao
     });
 
-    // Remove associações com eventos
     await EventoItem.destroy({
       where: { id_item: id },
       transaction: transacao

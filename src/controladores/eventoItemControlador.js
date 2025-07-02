@@ -1,8 +1,6 @@
 import { respostaHelper } from '../utilitarios/helpers/respostaHelper.js';
-import sequelize from '../config/database.js'; // 1. Importar a instância do sequelize
-import { QueryTypes } from 'sequelize';      // 2. Importar os tipos de query
-
-// Os modelos não são mais necessários para a função de listagem, mas podem ser usados em outras funções.
+import sequelize from '../config/database.js';
+import { QueryTypes } from 'sequelize';
 import EventoItem from '../modelos/eventoItem.js';
 import Evento from '../modelos/evento.js';
 import Item from '../modelos/item.js';
@@ -26,9 +24,6 @@ export const associarItemEvento = async (req, res) => {
   }
 };
 
-/**
- * @description Lista todas as associações cruas entre eventos e itens.
- */
 export const listarAssociacoes = async (req, res) => {
   try {
     const associacoes = await EventoItem.findAll();
@@ -46,9 +41,6 @@ export const listarAssociacoes = async (req, res) => {
   }
 };
 
-/**
- * @description Busca um evento pelo ID e lista seus detalhes, itens, datas e horários usando uma consulta SQL pura.
- */
 export const listarItensPorEvento = async (req, res) => {
   try {
     const { id_evento } = req.params;

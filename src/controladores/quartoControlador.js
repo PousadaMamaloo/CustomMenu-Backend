@@ -132,7 +132,6 @@ export const deletarQuarto = async (req, res) => {
       }));
     }
 
-    // Remove associações com eventos
     await EventoQuarto.destroy({
       where: { id_quarto: quarto.id_quarto },
       transaction: t

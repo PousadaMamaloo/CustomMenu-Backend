@@ -6,7 +6,7 @@ import { respostaHelper } from '../utilitarios/helpers/respostaHelper.js';
 import tokenBlacklist from '../utilitarios/autenticacao/tokenBlacklist.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'seu-segredo-jwt';
-const JWT_EXPIRES_IN = '1d';
+const JWT_EXPIRES_IN = '1h';
 
 export const loginHospede = async (req, res) => {
   const { num_quarto, telef_hospede } = req.body;
@@ -54,7 +54,7 @@ export const loginHospede = async (req, res) => {
       httpOnly: true,
       secure: false,
       sameSite: 'lax',
-      maxAge: 24 * 60 * 60 * 1000
+      maxAge: 60 * 60 * 1000
     });
 
     return res.status(200).json(respostaHelper({
