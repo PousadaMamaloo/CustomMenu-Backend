@@ -27,7 +27,7 @@ router.get('/quarto/:numQuarto', listarPedidosPorQuarto);
 router.get('/:idPedido', obterPedido);
 router.get('/evento/:id_evento/quarto/:num_quarto/data/:data_pedido', obterPedidoEventoQuartoData);
 router.put('/:idPedido', pedidoValidadorAtualizar, atualizarPedido);
-router.delete('/:idPedido', autorizaAdministrador, deletarPedido);
+router.delete('/:idPedido', deletarPedido);
 router.post('/', pedidoValidadorCriar, criarPedido);
 
 export default router;
