@@ -199,6 +199,7 @@ export const deletarPedido = async (req, res) => {
   const { idPedido } = req.params;
   const t = await sequelize.transaction();
   try {
+    // Primeiro, busca o pedido no banco
     const pedido = await Pedido.findByPk(idPedido, { transaction: t });
     if (!pedido) {
       await t.rollback();
@@ -207,9 +208,22 @@ export const deletarPedido = async (req, res) => {
         message: 'Pedido não encontrado.'
       }));
     }
+
+    // Se for hóspede, verifica se o pedido é do próprio quarto
+    if (req.user?.role === 'hospede') {
+      // Recupera o número do quarto referente ao pedido
+      const quarto = await Quarto.findByPk(pedido.id_quarto, { transaction: t });
+      if (!quarto || Number(quarto.num_quarto) !== Number(req.user.num_quarto)) {
+        await t.rollback();
+        return res.status(403).json(respostaHelper({
+          status: 403,
+          message: 'Acesso não autorizado: você só pode excluir pedidos do seu próprio quarto.'
+        }));
+      }
+    }
+
     await itemPedido.destroy({ where: { id_pedido: idPedido }, transaction: t });
     await pedido.destroy({ transaction: t });
-    
     await t.commit();
 
     return res.status(200).json(respostaHelper({

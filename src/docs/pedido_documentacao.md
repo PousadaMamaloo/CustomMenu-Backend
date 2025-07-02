@@ -101,7 +101,7 @@
 ### 4. Deletar Pedido
 - **Caminho:** `/api/pedidos/:idPedido`
 - **Método HTTP:** `DELETE`
-- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
+- **Autenticação:** Necessária (via `autenticador`)
 - **Descrição:** Deleta um pedido existente pelo seu ID.
 - **Parâmetros de Caminho:**
   - `idPedido`: ID do pedido (number).
@@ -273,9 +273,6 @@
   - `403 Forbidden`: Usuário não autorizado.
   - `500 Internal Server Error`: Erro interno do servidor.
 
-
-
-
 ### 9. Listar Pedidos de Hoje
 - **Caminho:** `/api/pedidos/hoje`
 - **Método HTTP:** `GET`
@@ -305,3 +302,48 @@
   - `500 Internal Server Error`: Erro interno do servidor.
 
 
+### 10. Obter Pedido por Evento, Quarto e Data
+- **Caminho:** `/api/pedidos/evento/:id_evento/quarto/:num_quarto/data/:data_pedido`
+- **Método HTTP:** `GET`
+- **Autenticação:** Necessária (via `autenticador`)
+- **Descrição:** Obtém os dados detalhados do pedido feito para um evento específico, por um quarto específico, em uma determinada data. O hóspede só pode consultar pedidos do próprio quarto.
+- **Parâmetros de Caminho:**
+  - `id_evento`: ID do evento (number)
+  - `num_quarto`: Número do quarto (number)
+  - `data_pedido`: Data do pedido no formato `YYYY-MM-DD`
+- **Respostas:**
+  - `200 OK`: Pedido encontrado ou nulo.
+    ```json
+    {
+      "mensagem": "Pedido encontrado com sucesso.",
+      "data": {
+        "id_pedido": "number",
+        "evento": "string",
+        "data_pedido": "YYYY-MM-DD",
+        "id_horario": "number",
+        "horario": "string",
+        "obs_pedido": "string",
+        "itens": [
+          {
+            "id_item": "number",
+            "nome": "string",
+            "quantidade": "number",
+            "valor_unitario": "number",
+            "valor_total": "number",
+            "foto_item": "string"
+          }
+        ]
+      }
+    }
+    ```
+    - Caso não exista pedido para os parâmetros fornecidos:
+    ```json
+    {
+      "mensagem": "Nenhum pedido existente para esse evento/quarto/data.",
+      "data": null
+    }
+    ```
+  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `403 Forbidden`: Usuário não autorizado a acessar pedidos de outro quarto.
+  - `404 Not Found`: Quarto não encontrado.
+  - `500 Internal Server Error`: Erro interno do servidor.
