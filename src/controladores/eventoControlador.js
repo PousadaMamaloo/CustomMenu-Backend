@@ -2,7 +2,6 @@ import { Op } from 'sequelize';
 import { validationResult } from 'express-validator';
 import sequelize from '../config/database.js';
 
-// Modelos
 import Evento from '../modelos/evento.js';
 import Item from '../modelos/item.js';
 import Horario from '../modelos/horario.js';
@@ -14,12 +13,7 @@ import ItemPedido from '../modelos/itemPedido.js';
 import EventoItem from '../modelos/eventoItem.js';
 import EventoHorario from '../modelos/eventoHorario.js';
 
-// Utilitários
 import { respostaHelper } from '../utilitarios/helpers/respostaHelper.js';
-
-// --- Funções de Leitura (Listagem) ---
-// Suas funções de listagem com raw queries são complexas e podem ser mantidas por enquanto.
-// O foco da correção está nas operações de escrita (criar, atualizar, excluir).
 
 export const listarEventos = async (req, res) => {
     try {
@@ -54,9 +48,6 @@ export const listarEventos = async (req, res) => {
     }
 };
 
-
-// --- Funções de Escrita (CUD - Create, Update, Delete) ---
-
 export const criarEvento = async (req, res) => {
     const erros = validationResult(req);
     if (!erros.isEmpty()) {
@@ -81,7 +72,6 @@ export const criarEvento = async (req, res) => {
             recorrencia, publico_alvo
         }, { transaction: t });
 
-        // Vincula Horários
         if (horarios && horarios.length > 0) {
             const horarioInstances = await Promise.all(
                 horarios.map(horarioStr => Horario.findOrCreate({
@@ -92,7 +82,6 @@ export const criarEvento = async (req, res) => {
             await evento.addHorarios(horarioInstances, { transaction: t });
         }
 
-        // Vincula Datas (se não for recorrente)
         if (!recorrencia && datas && datas.length > 0) {
             const datasParaCriar = datas.map(data => ({
                 id_evento: evento.id_evento,
@@ -101,7 +90,6 @@ export const criarEvento = async (req, res) => {
             await EventoData.bulkCreate(datasParaCriar, { transaction: t });
         }
 
-        // Vincula Quartos (se não for para público geral)
         if (!publico_alvo && quartos && quartos.length > 0) {
             const quartosEncontrados = await Quarto.findAll({ where: { num_quarto: quartos }, transaction: t });
             if (quartosEncontrados.length !== quartos.length) {
@@ -149,7 +137,7 @@ export const atualizarEvento = async (req, res) => {
     const {
         nome_evento, desc_evento, horarios,
         sts_evento, recorrencia, publico_alvo,
-        datas, quartos // `quartos` é um array de números de quarto, ex: [101, 202]
+        datas, quartos
     } = req.body;
 
     const t = await sequelize.transaction();
@@ -234,7 +222,6 @@ export const excluirEvento = async (req, res) => {
             return res.status(404).json(respostaHelper({ status: 404, message: 'Evento não encontrado.' }));
         }
 
-        // Deletar em cascata manualmente dentro da transação para garantir a ordem
         const pedidos = await Pedido.findAll({ where: { id_evento: id }, attributes: ['id_pedido'], transaction: t });
         const pedidoIds = pedidos.map(p => p.id_pedido);
 
@@ -260,8 +247,6 @@ export const excluirEvento = async (req, res) => {
     }
 };
 
-
-// --- Funções de Vínculo de Itens ---
 export const listarItensPorEvento = async (req, res) => {
     const { id } = req.params;
     try {
@@ -313,7 +298,6 @@ export const vincularItensEvento = async (req, res) => {
             return res.status(404).json(respostaHelper({ status: 404, message: 'Evento não encontrado.' }));
         }
 
-        // Usando o método de associação do Sequelize
         await evento.addItens(itens, { transaction: t });
 
         await t.commit();
@@ -325,7 +309,6 @@ export const vincularItensEvento = async (req, res) => {
     } catch (err) {
         await t.rollback();
         console.error(`Erro ao vincular itens ao evento ${id}:`, err);
-        // Trata erro de item não existente
         if (err.name === 'SequelizeForeignKeyConstraintError') {
             return res.status(404).json(respostaHelper({ status: 404, message: 'Um ou mais itens não foram encontrados.' }));
         }
@@ -360,8 +343,6 @@ export const desvincularItemEvento = async (req, res) => {
     }
 };
 
-// --- Outras Funções ---
-// Mantidas como estavam, pois não foram o foco do problema.
 export const listarEventosHospede = async (req, res) => {
     try {
         const { id_hospede, num_quarto } = req.user;

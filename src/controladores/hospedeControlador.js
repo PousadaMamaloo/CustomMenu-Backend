@@ -6,7 +6,7 @@ import jwt from 'jsonwebtoken';
 import { respostaHelper } from '../utilitarios/helpers/respostaHelper.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'seu-segredo-jwt';
-const JWT_EXPIRES = '1d';
+const JWT_EXPIRES = '1h';
 
 export const loginHospede = async (req, res) => {
   const { num_quarto, telef_hospede } = req.body;
@@ -59,9 +59,9 @@ export const loginHospede = async (req, res) => {
 
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // Mais seguro para produção
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 24 * 60 * 60 * 1000 // 1 dia
+      maxAge: 60 * 60 * 1000
     });
 
     return res.status(200).json(respostaHelper({
@@ -78,16 +78,10 @@ export const loginHospede = async (req, res) => {
   }
 };
 
-
-/**
- * Cria um novo hóspede e o associa a um quarto específico.
- * Utiliza uma transação para garantir a integridade dos dados.
- */
 export const criarHospede = async (req, res) => {
   const t = await sequelize.transaction();
 
   try {
-    // O corpo da requisição agora deve incluir o 'id_quarto'
     const { id_quarto, nome_hospede, email_hospede, telef_hospede, data_chegada, data_saida } = req.body;
 
     if (!id_quarto) {
@@ -148,10 +142,6 @@ export const criarHospede = async (req, res) => {
   }
 };
 
-
-/**
- * Lista todos os hóspedes cadastrados no sistema.
- */
 export const listarHospedes = async (req, res) => {
   try {
     const hospedes = await Hospede.findAll();
@@ -169,9 +159,6 @@ export const listarHospedes = async (req, res) => {
   }
 };
 
-/**
- * Busca um hóspede específico pelo seu ID.
- */
 export const buscarHospedePorId = async (req, res) => {
   try {
     const { id } = req.params;
@@ -198,9 +185,6 @@ export const buscarHospedePorId = async (req, res) => {
   }
 };
 
-/**
- * Atualiza os dados de um hóspede, com a opção de transferi-lo para outro quarto.
- */
 export const atualizarHospede = async (req, res) => {
   const t = await sequelize.transaction();
   try {
@@ -265,10 +249,6 @@ export const atualizarHospede = async (req, res) => {
   }
 };
 
-
-/**
- * Deleta um hóspede do banco de dados e desassocia-o do quarto.
- */
 export const deletarHospede = async (req, res) => {
   const t = await sequelize.transaction();
   try {

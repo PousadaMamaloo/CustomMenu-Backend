@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { respostaHelper } from '../utilitarios/helpers/respostaHelper.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'seu-segredo-jwt';
-const JWT_EXPIRES = '1d';
+const JWT_EXPIRES = '1h';
 
 export const loginAdministrador = async (req, res) => {
   const { usuario, senha } = req.body;
@@ -36,9 +36,9 @@ export const loginAdministrador = async (req, res) => {
 
     res.cookie('token', token, {
       httpOnly: true,
-      secure: false,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 24 * 60 * 60 * 1000
+      maxAge: 60 * 60 * 1000
     });
 
     return res.status(200).json(respostaHelper({
