@@ -46,9 +46,6 @@ export const pedidoValidadorCriar = [
       const index = Number(path.match(/\d+/)[0]);
       const id_item = req.body.itens[index]?.id_item;
       const item = await Item.findByPk(id_item);
-      if (item && item.qntd_max_hospede && qntd_item > item.qntd_max_hospede) {
-        throw new Error(`Quantidade para "${item.nome_item}" excede o limite de ${item.qntd_max_hospede}.`);
-      }
       return true;
     }),
 
@@ -84,9 +81,6 @@ export const pedidoValidadorAtualizar = [
       const index = Number(path.match(/\d+/)[0]);
       const id_item = req.body.itens[index]?.id_item;
       const item = await Item.findByPk(id_item);
-      if (item && item.qntd_max_hospede && qntd_item > item.qntd_max_hospede) {
-        throw new Error(`Quantidade para "${item.nome_item}" excede o limite de ${item.qntd_max_hospede}.`);
-      }
       return true;
     }),
 
