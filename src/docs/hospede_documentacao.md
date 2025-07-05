@@ -4,33 +4,8 @@ Esta documentação detalha os endpoints para gerenciar os hóspedes e sua assoc
 
 ---
 
-### 1. Login Hóspede
-- **Caminho:** `/api/hospedes/login`
-- **Método HTTP:** `POST`
-- **Autenticação:** Nenhuma
-- **Descrição:** Autentica um hóspede com base no número do seu quarto e telefone. Se as credenciais estiverem corretas e a estadia estiver ativa, retorna um cookie com o token de autenticação.
-- **Corpo da Requisição (JSON):**
-  ```json
-  {
-    "num_quarto": 101,
-    "telef_hospede": "82999887766"
-  }
-  ```
-- **Respostas:**
-  - `200 OK`: Login bem-sucedido.
-    ```json
-    {
-      "status": 200,
-      "message": "Login realizado com sucesso."
-    }
-    ```
-  - `401 Unauthorized`: Telefone incorreto.
-  - `403 Forbidden`: A estadia do hóspede não está no período ativo (data de chegada/saída).
-  - `404 Not Found`: Quarto não encontrado ou sem hóspede responsável associado.
-  - `500 Internal Server Error`: Erro interno do servidor.
-
-### 2. Cadastrar Hóspede e Associar a um Quarto
-- **Caminho:** `/api/hospedes/cadastrar`
+### 1. Cadastrar Hóspede e Associar a um Quarto
+- **Caminho:** `/api/hospedes`
 - **Método HTTP:** `POST`
 - **Autenticação:** Necessária (Administrador)
 - **Descrição:** Cadastra um novo hóspede e o associa imediatamente a um quarto vago. A operação é transacional: ou ambos os passos são concluídos com sucesso, ou nada é salvo no banco de dados.
@@ -60,8 +35,8 @@ Esta documentação detalha os endpoints para gerenciar os hóspedes e sua assoc
   - `409 Conflict`: O quarto já está ocupado por outro hóspede.
   - `500 Internal Server Error`: Erro interno do servidor.
 
-### 3. Listar Hóspedes
-- **Caminho:** `/api/hospedes/listar`
+### 2. Listar Hóspedes
+- **Caminho:** `/api/hospedes`
 - **Método HTTP:** `GET`
 - **Autenticação:** Necessária (Administrador)
 - **Descrição:** Retorna uma lista de todos os hóspedes cadastrados no sistema.
@@ -76,7 +51,7 @@ Esta documentação detalha os endpoints para gerenciar os hóspedes e sua assoc
     ```
   - `500 Internal Server Error`: Erro interno do servidor.
 
-### 4. Buscar Hóspede por ID
+### 3. Buscar Hóspede por ID
 - **Caminho:** `/api/hospedes/:id`
 - **Método HTTP:** `GET`
 - **Autenticação:** Necessária (Administrador)
@@ -95,7 +70,7 @@ Esta documentação detalha os endpoints para gerenciar os hóspedes e sua assoc
   - `404 Not Found`: Hóspede não encontrado.
   - `500 Internal Server Error`: Erro interno do servidor.
 
-### 5. Atualizar Hóspede / Transferir de Quarto
+### 4. Atualizar Hóspede / Transferir de Quarto
 - **Caminho:** `/api/hospedes/:id`
 - **Método HTTP:** `PUT`
 - **Autenticação:** Necessária (Administrador)
@@ -125,7 +100,7 @@ Esta documentação detalha os endpoints para gerenciar os hóspedes e sua assoc
   - `409 Conflict`: O novo quarto para o qual se tenta transferir o hóspede já está ocupado.
   - `500 Internal Server Error`: Erro interno do servidor.
 
-### 6. Deletar Hóspede
+### 5. Deletar Hóspede
 - **Caminho:** `/api/hospedes/:id`
 - **Método HTTP:** `DELETE`
 - **Autenticação:** Necessária (Administrador)

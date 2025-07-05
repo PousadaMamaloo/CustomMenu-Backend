@@ -15,11 +15,11 @@ const router = express.Router();
 
 router.use(autenticador);
 
-router.post('/criar', autorizaAdministrador, quartoValidador, criarQuarto);
+router.post('/', autorizaAdministrador, quartoValidador, criarQuarto);
 router.put('/:num', autorizaAdministrador, atualizarQuarto);
 router.delete('/:num', autorizaAdministrador, deletarQuarto);
-router.get('/listar', autorizaAdministrador, listarQuartos);
-router.get('/buscar/:num', autorizaAdministrador, buscarQuarto);
+router.get('/', autorizaAdministrador, listarQuartos);
+router.get('/:num', autorizaAdministrador, buscarQuarto);
 
 export default router;
 
