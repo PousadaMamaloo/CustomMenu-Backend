@@ -37,12 +37,12 @@ app.get("/", (req, res) => {
 app.use('/api/quartos', quartoRotas);
 app.use('/api/hospedes', hospedeRotas);
 app.use('/api/administrador', administradorRotas);
-app.use('/api/itens', itemRotas);
+app.use('/api/itens', itemRotas); // relatorio do evento ficaria aqui 
 app.use('/api/eventos', eventoRotas);
 app.use('/api/eventoItem', eventoItemRotas);
 app.use('/api/pedidos', pedidoRotas);
-app.use("/admin/relatorios", relatorioRotas);
-app.use("/api/auth", autenticacaoRotas);
+// app.use('/admin/relatorios', relatorioRotas); DEIXARIA DE EXISTIR
+app.use('/api/auth', autenticacaoRotas);
 
 (async () => {
   try {

@@ -19,6 +19,8 @@ const router = express.Router();
 
 router.use(autenticador);
 
+// router.get('/:id/relatorio', gerarRelatorioPorEvento);
+
 router.get('/', listarEventos);
 router.get('/:id/itens', autorizaAdministrador, listarItensPorEvento);
 router.post('/:id/itens', autorizaAdministrador, vincularItensEvento);
@@ -26,10 +28,9 @@ router.delete('/:id/itens/:id_item', autorizaAdministrador, desvincularItemEvent
 router.post('/', autorizaAdministrador, eventoValidador, criarEvento);
 router.put('/:id', autorizaAdministrador, eventoValidador, atualizarEvento);
 router.delete('/:id', autorizaAdministrador, excluirEvento);
-router.get('/hoje', autorizaAdministrador, listarItensEventosHoje);
+router.get('/hoje', autorizaAdministrador, listarItensEventosHoje); 
+router.get('/:id', autorizaAdministrador, listarEventoPorId);
+router.get("/disponiveis", listarEventosHospede);
 
 export default router;
 
-router.get("/hospede", listarEventosHospede);
-
-router.get("/:id", autorizaAdministrador, listarEventoPorId);
