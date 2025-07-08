@@ -15,6 +15,10 @@ import EventoHorario from '../modelos/eventoHorario.js';
 
 import { respostaHelper } from '../utilitarios/helpers/respostaHelper.js';
 
+/**
+ * @description Lista todos os eventos, agregando seus horários, datas e quartos associados diretamente via query nativa para otimização.
+ */
+
 export const listarEventos = async (req, res) => {
     try {
         const [result] = await sequelize.query(`
@@ -47,6 +51,10 @@ export const listarEventos = async (req, res) => {
         }));
     }
 };
+
+/**
+ * @description Cria um novo evento e suas associações (horários, datas, quartos) de forma transacional e atômica.
+ */
 
 export const criarEvento = async (req, res) => {
     const erros = validationResult(req);
@@ -122,6 +130,10 @@ export const criarEvento = async (req, res) => {
         }));
     }
 };
+
+/**
+ * @description Atualiza um evento e substitui completamente suas associações (horários, datas, quartos) em uma única transação.
+ */
 
 export const atualizarEvento = async (req, res) => {
     const erros = validationResult(req);
@@ -211,6 +223,10 @@ export const atualizarEvento = async (req, res) => {
     }
 };
 
+/**
+ * @description Exclui um evento e realiza a exclusão em cascata de todos os seus dados dependentes (pedidos, itens de pedidos, etc.) de forma transacional.
+ */
+
 export const excluirEvento = async (req, res) => {
     const { id } = req.params;
     const t = await sequelize.transaction();
@@ -247,6 +263,10 @@ export const excluirEvento = async (req, res) => {
     }
 };
 
+/**
+ * @description Lista todos os itens que estão vinculados a um evento específico.
+ */
+
 export const listarItensPorEvento = async (req, res) => {
     const { id } = req.params;
     try {
@@ -282,6 +302,10 @@ export const listarItensPorEvento = async (req, res) => {
     }
 };
 
+/**
+ * @description Vincula um ou mais itens a um evento, criando as associações na tabela pivo.
+ */
+
 export const vincularItensEvento = async (req, res) => {
     const { id } = req.params;
     const { itens } = req.body;
@@ -316,6 +340,10 @@ export const vincularItensEvento = async (req, res) => {
     }
 };
 
+/**
+ * @description Desvincula um item específico de um evento, removendo a associação da tabela pivo.
+ */
+
 export const desvincularItemEvento = async (req, res) => {
     const { id, id_item } = req.params;
     const t = await sequelize.transaction();
@@ -342,6 +370,10 @@ export const desvincularItemEvento = async (req, res) => {
         return res.status(500).json(respostaHelper({ status: 500, message: 'Erro ao desvincular item do evento.', errors: [err.message] }));
     }
 };
+
+/**
+ * @description Lista os eventos disponíveis para o hóspede autenticado com base em regras de visibilidade (público, recorrente, data ou quarto específico).
+ */
 
 export const listarEventosHospede = async (req, res) => {
     try {
@@ -403,6 +435,10 @@ export const listarEventosHospede = async (req, res) => {
     }
 };
 
+/**
+ * @description Busca um evento por ID e retorna todos os seus dados e associações (horários, datas, quartos, itens) agregados via query nativa.
+ */
+
 export const listarEventoPorId = async (req, res) => {
     const { id } = req.params;
     try {
@@ -441,6 +477,10 @@ export const listarEventoPorId = async (req, res) => {
         return res.status(500).json(respostaHelper({ status: 500, message: 'Erro ao buscar evento.', errors: [err.message] }));
     }
 };
+
+/**
+ * @description Gera um relatório consolidado dos itens pedidos hoje para todos os eventos que ocorrem no dia, somando quantidades e valores.
+ */
 
 export const listarItensEventosHoje = async (req, res) => {
     try {

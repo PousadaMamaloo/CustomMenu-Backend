@@ -1,3 +1,8 @@
+/**
+ * @description Gerencia uma blacklist de tokens JWT em memória para invalidar sessões (ex: logout).
+ * Inclui um mecanismo de limpeza automática para remover tokens que já expiraram.
+ */
+
 class TokenBlacklist {
     constructor() {
         this.blacklistedTokens = new Set();

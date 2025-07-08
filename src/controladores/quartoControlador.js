@@ -4,6 +4,10 @@ import { validationResult } from 'express-validator';
 import sequelize from '../config/database.js';
 import EventoQuarto from '../modelos/eventoQuarto.js';
 
+/**
+ * @description Valida os dados de entrada e cria um novo quarto no sistema.
+ */
+
 export const criarQuarto = async (req, res) => {
   const erros = validationResult(req);
   if (!erros.isEmpty()) {
@@ -38,6 +42,10 @@ export const criarQuarto = async (req, res) => {
   }
 };
 
+/**
+ * @description Retorna a lista completa de todos os quartos cadastrados.
+ */
+
 export const listarQuartos = async (req, res) => {
   try {
     const quartos = await Quarto.findAll();
@@ -54,6 +62,10 @@ export const listarQuartos = async (req, res) => {
     }));
   }
 };
+
+/**
+ * @description Busca e retorna os dados de um quarto específico pelo seu número.
+ */
 
 export const buscarQuarto = async (req, res) => {
   try {
@@ -89,6 +101,10 @@ export const buscarQuarto = async (req, res) => {
   }
 };
 
+/**
+ * @description Atualiza as informações de um quarto existente, identificado pelo seu número.
+ */
+
 export const atualizarQuarto = async (req, res) => {
   try {
     const { num } = req.params;
@@ -117,6 +133,10 @@ export const atualizarQuarto = async (req, res) => {
     }));
   }
 };
+
+/**
+ * @description Exclui um quarto e seus registros associados na tabela EventoQuarto de forma transacional.
+ */
 
 export const deletarQuarto = async (req, res) => {
   const t = await sequelize.transaction();
