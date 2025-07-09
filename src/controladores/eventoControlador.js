@@ -12,8 +12,8 @@ import Pedido from '../modelos/pedido.js';
 import ItemPedido from '../modelos/itemPedido.js';
 import EventoItem from '../modelos/eventoItem.js';
 import EventoHorario from '../modelos/eventoHorario.js';
-
 import { respostaHelper } from '../utilitarios/helpers/respostaHelper.js';
+import { QueryTypes } from 'sequelize';
 
 export const listarEventos = async (req, res) => {
     try {
@@ -247,7 +247,7 @@ export const excluirEvento = async (req, res) => {
     }
 };
 
-export const listarItensPorEvento = async (req, res) => {
+export const listarItensPorEventoAdmin = async (req, res) => {
     const { id } = req.params;
     try {
         const evento = await Evento.findByPk(id, {
@@ -525,4 +525,180 @@ export const listarItensEventosHoje = async (req, res) => {
         console.error("Erro ao gerar relatório de itens dos eventos de hoje:", err);
         return res.status(500).json(respostaHelper({ status: 500, message: "Erro ao gerar relatório de itens dos eventos de hoje.", errors: [err.message] }));
     }
+};
+
+export const gerarRelatorioPorEvento = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const evento = await Evento.findByPk(id);
+        if (!evento) {
+            return res.status(404).json(respostaHelper({
+                status: 404,
+                message: 'Evento não encontrado.'
+            }));
+        }
+
+        const query = `
+            SELECT 
+                i.nome_item AS item,
+                i.categ_item AS categoria,
+                SUM(ip.qntd_item) AS quantidade,
+                SUM(ip.qntd_item * i.valor_item) AS valor_total
+            FROM 
+                mamaloo.tab_pedido p
+                JOIN mamaloo.tab_re_item_pedido ip ON p.id_pedido = ip.id_pedido
+                JOIN mamaloo.tab_item i ON ip.id_item = i.id_item
+            WHERE 
+                p.id_evento = :id
+            GROUP BY 
+                i.nome_item, i.categ_item
+            ORDER BY 
+                i.categ_item, i.nome_item
+        `;
+
+        const resultado = await sequelize.query(query, {
+            replacements: { id },
+            type: QueryTypes.SELECT
+        });
+
+        
+        const relatorio = {
+            evento: evento.nome_evento,
+            dados: resultado.map(item => ({
+                item: item.item,
+                quantidade: parseInt(item.quantidade),
+                categoria: item.categoria,
+                valor_total: parseFloat(item.valor_total)
+            }))
+        };
+
+        return res.status(200).json(respostaHelper({
+            status: 200,
+            message: 'Relatório gerado com sucesso.',
+            data: relatorio
+        }));
+    } catch (err) {
+        console.error(`Erro ao gerar relatório para o evento ${id}:`, err);
+        return res.status(500).json(respostaHelper({
+            status: 500,
+            message: 'Erro ao gerar relatório.',
+            errors: [err.message]
+        }));
+    }
+};
+
+export const associarItemEvento = async (req, res) => {
+  const { id_evento, id_item, disp_item } = req.body;
+
+  try {
+    await EventoItem.create({ id_evento, id_item, disp_item });
+
+    return res.status(201).json(respostaHelper({
+      status: 201,
+      message: 'Item associado ao evento com sucesso!'
+    }));
+  } catch (err) {
+    return res.status(500).json(respostaHelper({
+      status: 500,
+      message: 'Erro ao associar item ao evento.',
+      errors: [err.message]
+    }));
+  }
+};
+
+export const listarAssociacoes = async (req, res) => {
+  try {
+    const associacoes = await EventoItem.findAll();
+    return res.status(200).json(respostaHelper({
+      status: 200,
+      data: associacoes,
+      message: 'Associações listadas com sucesso!'
+    }));
+  } catch (err) {
+    return res.status(500).json(respostaHelper({
+      status: 500,
+      message: 'Erro ao listar associações.',
+      errors: [err.message]
+    }));
+  }
+};
+
+export const listarItensPorEvento = async (req, res) => {
+  try {
+    const { id_evento } = req.params;
+
+    const sqlEvento = `
+      SELECT nome_evento, desc_evento
+      FROM mamaloo.tab_evento
+      WHERE id_evento = :id_evento;
+    `;
+    const eventoInfo = await sequelize.query(sqlEvento, {
+      replacements: { id_evento },
+      type: QueryTypes.SELECT,
+      plain: true
+    });
+
+    if (!eventoInfo) {
+      return res.status(404).json(respostaHelper({
+        status: 404,
+        message: 'Evento não encontrado.'
+      }));
+    }
+
+    const sqlItens = `
+      SELECT i.*
+      FROM mamaloo.tab_item AS i
+      INNER JOIN mamaloo.tab_re_evento_item AS rei ON i.id_item = rei.id_item
+      WHERE rei.id_evento = :id_evento;
+    `;
+    const itens = await sequelize.query(sqlItens, {
+      replacements: { id_evento },
+      type: QueryTypes.SELECT
+    });
+
+    const sqlDatas = `
+      SELECT data_evento
+      FROM mamaloo.tab_re_evento_data
+      WHERE id_evento = :id_evento;
+    `;
+    const datasResult = await sequelize.query(sqlDatas, {
+      replacements: { id_evento },
+      type: QueryTypes.SELECT
+    });
+    const datas = datasResult.map(d => d.data_evento);
+
+
+    const sqlHorarios = `
+      SELECT h.id_horario, h.horario
+      FROM mamaloo.tab_horario AS h
+      INNER JOIN mamaloo.tab_re_evento_horario AS reh ON h.id_horario = reh.id_horario
+      WHERE reh.id_evento = :id_evento;
+    `;
+    const horarios = await sequelize.query(sqlHorarios, {
+      replacements: { id_evento },
+      type: QueryTypes.SELECT
+    });
+
+    const resultadoFinal = {
+      ...eventoInfo,
+      datas,        
+      horarios,     
+      itens         
+    };
+
+    return res.status(200).json(respostaHelper({
+      status: 200,
+      message: 'Detalhes do evento listados com sucesso!',
+      data: resultadoFinal
+    }));
+
+  } catch (err) {
+    console.error("Erro na consulta SQL:", err);
+    return res.status(500).json(respostaHelper({
+      status: 500,
+      message: 'Erro ao listar os detalhes do evento.',
+      errors: [err.message]
+    }));
+  }
 };

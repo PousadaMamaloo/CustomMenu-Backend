@@ -319,6 +319,99 @@
       ]
     }
     ```
+### 10. Associar Item a Evento
+- **Caminho:** `/api/eventos/eventoItem/`
+- **Método HTTP:** `POST`
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
+- **Validação:** `eventoItemValidador`, `validarRequisicao`
+- **Descrição:** Associa um item a um evento.
+- **Corpo da Requisição (JSON):**
+  ```json
+  {
+    "eventoId": "number",
+    "itemId": "number"
+  }
+  ```
+- **Respostas:**
+  - `201 Created`: Item associado ao evento com sucesso.
+    ```json
+    {
+      "mensagem": "Item associado ao evento com sucesso!",
+      "associacao": { ... }
+    }
+    ```
+  - `400 Bad Request`: Dados inválidos fornecidos.
+  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `500 Internal Server Error`: Erro interno do servidor.
 
+### 11. Listar Associações de Itens de Evento
+- **Caminho:** `/api/eventos/eventoItem/`
+- **Método HTTP:** `GET`
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
+- **Descrição:** Lista todas as associações entre itens e eventos.
+- **Respostas:**
+  - `200 OK`: Lista de associações retornada com sucesso.
+    ```json
+    [
+      { "id": 1, "eventoId": 1, "itemId": 1, "createdAt": "...", "updatedAt": "..." },
+      { "id": 2, "eventoId": 1, "itemId": 2, "createdAt": "...", "updatedAt": "..." }
+    ]
+    ```
+  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `500 Internal Server Error`: Erro interno do servidor.
 
+### 12. Listar Detalhes Completos de um Evento
 
+- **Caminho:** `/api/eventos/eventoItem/:id_evento`
+- **Método HTTP:** `GET`
+- **Autenticação:** Necessária (via `autenticador`)
+- **Descrição:** Recupera todas as informações detalhadas de um evento específico, incluindo seus dados básicos (nome, descrição), a lista de itens associados, as datas em que ocorre e os horários disponíveis.
+- **Respostas:**
+  - `200 OK`: Detalhes do evento retornados com sucesso.
+    ```json
+    {
+      "status": 200,
+      "message": "Detalhes do evento listados com sucesso!",
+      "data": {
+        "nome_evento": "Café da Manhã Especial",
+        "desc_evento": "Um café da manhã completo com itens artesanais.",
+        "datas": [
+          "2025-07-25",
+          "2025-07-26"
+        ],
+        "horarios": [
+          { "id_horario": 1, "horario": "08:00" },
+          { "id_horario": 2, "horario": "09:00" }
+        ],
+        "itens": [
+          {
+            "id_item": 10,
+            "nome_item": "Cesta de Pães",
+            "desc_item": "Pães frescos variados.",
+            "valor_item": 15.00,
+            "categ_item": "Padaria",
+            "foto_item": "data:image/jpeg;base64,..."
+          },
+          {
+            "id_item": 12,
+            "nome_item": "Suco de Laranja Natural",
+            "desc_item": "Feito na hora.",
+            "valor_item": 8.00,
+            "categ_item": "Bebidas",
+            "foto_item": "data:image/jpeg;base64,..."
+          }
+        ]
+      }
+    }
+    ```
+  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `404 Not Found`: O `id_evento` fornecido não corresponde a nenhum evento existente.
+    ```json
+    {
+        "status": 404,
+        "data": {},
+        "message": "Evento não encontrado.",
+        "errors": {}
+    }
+    ```
+  - `500 Internal Server Error`: Erro interno ao executar a consulta no banco de dados.
