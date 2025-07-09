@@ -1,5 +1,10 @@
 import Hospede from '../modelos/hospede.js';
 
+/**
+ * @description Middleware que verifica se a estadia do hóspede autenticado está ativa, comparando a data atual com as datas de chegada e saída. 
+ * Deve ser usado após um middleware de autenticação.
+ */
+
 export const verificaEstadiaAtiva = async (req, res, next) => {
   try {
     const { id_hospede } = req.user;

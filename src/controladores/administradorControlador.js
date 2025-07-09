@@ -6,6 +6,10 @@ import { respostaHelper } from '../utilitarios/helpers/respostaHelper.js';
 const JWT_SECRET = process.env.JWT_SECRET || 'seu-segredo-jwt';
 const JWT_EXPIRES = '1h';
 
+/**
+ * @description Autentica o administrador pelo usuario e senha, gerando um token JWT.
+ */
+
 export const loginAdministrador = async (req, res) => {
   const { usuario, senha } = req.body;
 

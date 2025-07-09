@@ -8,6 +8,10 @@ import { respostaHelper } from '../utilitarios/helpers/respostaHelper.js';
 const JWT_SECRET = process.env.JWT_SECRET || 'seu-segredo-jwt';
 const JWT_EXPIRES = '1h';
 
+/**
+ * @description Autentica um hóspede pelo número do quarto e telefone, gerando um token JWT.
+ */
+
 export const loginHospede = async (req, res) => {
   const { num_quarto, telef_hospede } = req.body;
 
@@ -78,6 +82,10 @@ export const loginHospede = async (req, res) => {
   }
 };
 
+/**
+ * @description Cria um novo hóspede e o associa como responsável por um quarto.
+ */
+
 export const criarHospede = async (req, res) => {
   const t = await sequelize.transaction();
 
@@ -142,6 +150,10 @@ export const criarHospede = async (req, res) => {
   }
 };
 
+/**
+ * @description Retorna a lista de todos os hóspedes cadastrados no sistema.
+ */
+
 export const listarHospedes = async (req, res) => {
   try {
     const hospedes = await Hospede.findAll();
@@ -158,6 +170,10 @@ export const listarHospedes = async (req, res) => {
     }));
   }
 };
+
+/**
+ * @description Busca e retorna um hóspede específico pelo seu ID.
+ */
 
 export const buscarHospedePorId = async (req, res) => {
   try {
@@ -184,6 +200,10 @@ export const buscarHospedePorId = async (req, res) => {
     }));
   }
 };
+
+/**
+ * @description Atualiza os dados de um hóspede, incluindo a possível troca de quarto.
+ */
 
 export const atualizarHospede = async (req, res) => {
   const t = await sequelize.transaction();
@@ -248,6 +268,10 @@ export const atualizarHospede = async (req, res) => {
     }));
   }
 };
+
+/**
+ * @description Exclui um hóspede do sistema e desocupa o quarto que ele era responsável.
+ */
 
 export const deletarHospede = async (req, res) => {
   const t = await sequelize.transaction();
