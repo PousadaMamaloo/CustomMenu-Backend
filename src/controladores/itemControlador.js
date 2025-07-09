@@ -7,6 +7,10 @@ import EventoItem from '../modelos/eventoItem.js';
 import ItemPedido from '../modelos/itemPedido.js';
 import sequelize from '../config/database.js';
 
+/**
+ * @description Comprime e redimensiona uma imagem em formato base64 usando a biblioteca sharp.
+ */
+
 async function comprimirImagemBase64(foto_item) {
   if (foto_item && foto_item.startsWith('data:image/')) {
     const [header, base64Data] = foto_item.split(',');
@@ -21,6 +25,10 @@ async function comprimirImagemBase64(foto_item) {
   }
   return foto_item;
 }
+
+/**
+ * @description Valida os dados e cria um novo item no banco, comprimindo a imagem antes de salvar.
+ */
 
 export const criarItem = async (req, res) => {
   const erros = validationResult(req);
@@ -61,6 +69,10 @@ export const criarItem = async (req, res) => {
   }
 };
 
+/**
+ * @description Retorna a lista completa de todos os itens cadastrados no sistema.
+ */
+
 export const listarItens = async (req, res) => {
   try {
     const itens = await Item.findAll();
@@ -79,6 +91,10 @@ export const listarItens = async (req, res) => {
     }));
   }
 };
+
+/**
+ * @description Atualiza os dados de um item existente a partir do seu ID, com compressão de imagem se houver.
+ */
 
 export const atualizarItem = async (req, res) => {
   const erros = validationResult(req);
@@ -123,6 +139,10 @@ export const atualizarItem = async (req, res) => {
   }
 };
 
+/**
+ * @description Exclui um item e suas associações (ItemPedido, EventoItem) de forma transacional.
+ */
+
 export async function excluirItem(req, res) {
   const id = req.params.id;
   const transacao = await sequelize.transaction();
@@ -158,6 +178,10 @@ export async function excluirItem(req, res) {
   }
 }
 
+/**
+ * @description Retorna uma lista com todas as categorias de itens únicas e não nulas.
+ */
+
 export const listarCategoriasUnicas = async (req, res) => {
   try {
     const categorias = await Item.findAll({
@@ -182,6 +206,10 @@ export const listarCategoriasUnicas = async (req, res) => {
     }));
   }
 };
+
+/**
+ * @description Busca e retorna os dados de um item específico pelo seu ID.
+ */
 
 export const buscarItem = async (req, res) => {
   const { id } = req.params;

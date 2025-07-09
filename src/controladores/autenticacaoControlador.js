@@ -8,6 +8,10 @@ import tokenBlacklist from '../utilitarios/autenticacao/tokenBlacklist.js';
 const JWT_SECRET = process.env.JWT_SECRET || 'seu-segredo-jwt';
 const JWT_EXPIRES_IN = '1h';
 
+/**
+ * @description Autentica um hóspede pelo quarto e telefone, gerando um token JWT em um cookie httpOnly.
+ */
+
 export const loginHospede = async (req, res) => {
   const { num_quarto, telef_hospede } = req.body;
 
@@ -76,6 +80,10 @@ export const loginHospede = async (req, res) => {
   }
 };
 
+/**
+ * @description Realiza o logout do usuário, invalidando o token JWT ao adicioná-lo a uma blacklist e limpando o cookie.
+ */
+
 export const logout = async (req, res) => {
   try {
   
@@ -126,7 +134,9 @@ export const logout = async (req, res) => {
   }
 };
 
-
+/**
+ * @description Verifica a validade do token JWT do usuário, geralmente após uma verificação por middleware.
+ */
 
 export const validarToken = async (req, res) => {
   try {

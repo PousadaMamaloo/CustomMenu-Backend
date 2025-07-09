@@ -1,6 +1,11 @@
 import jwt from "jsonwebtoken";
 import tokenBlacklist from "./tokenBlacklist.js";
 
+/**
+ * @description Middleware para autenticação opcional. Tenta validar um token, se presente e válido, e anexa os dados do usuário ao 'req.user'. 
+ * Se o token não existir, for inválido ou estiver na blacklist, a requisição continua sem um usuário autenticado, sem gerar erro.
+ */
+
 const autenticadorOpcional = (req, res, next) => {
   const token =
     (req.cookies && req.cookies.token) ||
