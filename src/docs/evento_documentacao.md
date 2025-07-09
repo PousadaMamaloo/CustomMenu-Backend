@@ -16,7 +16,7 @@
   - `401 Unauthorized`: Token de autenticação ausente ou inválido.
   - `500 Internal Server Error`: Erro interno do servidor.
 
-### 2. Listar Itens por Evento
+### 2. Listar Itens por Evento Visão do Administrador
 - **Caminho:** `/api/eventos/:id/itens`
 - **Método HTTP:** `GET`
 - **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
@@ -153,7 +153,7 @@
 - **Corpo da Requisição (JSON):**
   ```json
   {
-    "itensIds": ["number"]
+    "itens": ["number"]
   }
   ```
 - **Respostas:**
@@ -189,34 +189,6 @@
   - `404 Not Found`: Evento ou item não encontrado.
   - `500 Internal Server Error`: Erro interno do servidor.
 
-### 9. Listar Quartos de um Evento
-
-- **Caminho:** `/api/eventos/:id/quartos`
-- **Método HTTP:** `GET`
-- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
-
-### 10. Adicionar Datas a um Evento
-
-- **Caminho:** `/api/eventos/:id/datas`
-- **Método HTTP:** `POST`
-- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
-- **Descrição:** Associa datas específicas ao evento.
-- **Corpo:**
-
-  ```json
-  {
-    "datas": ["2025-06-20", "2025-06-21"]
-  }
-  ```
-
-### 11. Listar Datas de um Evento
-
-- **Caminho:** `/api/eventos/:id/datas`
-- **Método HTTP:** `GET`
-- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
-
-
-
 ### 8. Listar Eventos para Hóspede
 - **Caminho:** `/api/eventos/hospede`
 - **Método HTTP:** `GET`
@@ -236,7 +208,7 @@
   - `500 Internal Server Error`: Erro interno do servidor.
 
 
-### 8. Obter Evento por ID
+### 9. Obter Evento por ID
 - **Caminho:** `/api/eventos/:id`
 - **Método HTTP:** `GET`
 - **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
@@ -264,7 +236,7 @@
   - `404 Not Found`: Evento não encontrado.
   - `500 Internal Server Error`: Erro interno do servidor.
 
-  ### 9. Relatório de Itens dos Eventos de Hoje
+  ### 10. Relatório de Itens dos Eventos de Hoje
 - **Caminho:** `/api/eventos/hoje`
 - **Método HTTP:** `GET`
 - **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
@@ -319,7 +291,7 @@
       ]
     }
     ```
-### 10. Associar Item a Evento
+### 11. Associar Item a Evento
 - **Caminho:** `/api/eventos/eventoItem/`
 - **Método HTTP:** `POST`
 - **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
@@ -344,7 +316,7 @@
   - `401 Unauthorized`: Token de autenticação ausente ou inválido.
   - `500 Internal Server Error`: Erro interno do servidor.
 
-### 11. Listar Associações de Itens de Evento
+### 12. Listar Associações de Itens de Evento
 - **Caminho:** `/api/eventos/eventoItem/`
 - **Método HTTP:** `GET`
 - **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
@@ -360,7 +332,7 @@
   - `401 Unauthorized`: Token de autenticação ausente ou inválido.
   - `500 Internal Server Error`: Erro interno do servidor.
 
-### 12. Listar Detalhes Completos de um Evento
+### 13. Listar Detalhes Completos de um Evento
 
 - **Caminho:** `/api/eventos/eventoItem/:id_evento`
 - **Método HTTP:** `GET`

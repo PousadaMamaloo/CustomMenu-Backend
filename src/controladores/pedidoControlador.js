@@ -63,7 +63,7 @@ export const criarPedido = async (req, res) => {
 
 export const obterPedido = async (req, res) => {
   try {
-    const { idPedido } = req.params;
+    const { id } = req.params;
 
     if (req.user?.role === 'hospede' && Number(num_quarto) !== Number(req.user.num_quarto)) {
       return res.status(403).json(respostaHelper({
@@ -72,7 +72,7 @@ export const obterPedido = async (req, res) => {
       }));
     }
 
-    const pedido = await Pedido.findByPk(idPedido, {
+    const pedido = await Pedido.findByPk(id, {
       include: [
         {
           model: Item,
@@ -134,13 +134,13 @@ export const atualizarPedido = async (req, res) => {
     }));
   }
 
-  const { idPedido } = req.params;
+  const { id } = req.params;
   const { itens, id_horario, obs_pedido } = req.body;
 
   const t = await sequelize.transaction();
 
   try {
-    const pedido = await Pedido.findByPk(idPedido, { transaction: t });
+    const pedido = await Pedido.findByPk(id, { transaction: t });
     if (!pedido) {
       await t.rollback();
       return res.status(404).json(respostaHelper({
@@ -168,10 +168,10 @@ export const atualizarPedido = async (req, res) => {
     await pedido.save({ transaction: t });
 
     if (itens && itens.length > 0) {
-      await itemPedido.destroy({ where: { id_pedido: idPedido }, transaction: t });
+      await itemPedido.destroy({ where: { id_pedido: id }, transaction: t });
 
       const novosItens = itens.map(it => ({
-        id_pedido: idPedido,
+        id_pedido: id,
         id_item: it.id_item,
         qntd_item: it.qntd_item
       }));
@@ -196,11 +196,10 @@ export const atualizarPedido = async (req, res) => {
 };
 
 export const deletarPedido = async (req, res) => {
-  const { idPedido } = req.params;
+  const { id } = req.params;
   const t = await sequelize.transaction();
   try {
-    // Primeiro, busca o pedido no banco
-    const pedido = await Pedido.findByPk(idPedido, { transaction: t });
+    const pedido = await Pedido.findByPk(id, { transaction: t });
     if (!pedido) {
       await t.rollback();
       return res.status(404).json(respostaHelper({
@@ -209,9 +208,7 @@ export const deletarPedido = async (req, res) => {
       }));
     }
 
-    // Se for hóspede, verifica se o pedido é do próprio quarto
     if (req.user?.role === 'hospede') {
-      // Recupera o número do quarto referente ao pedido
       const quarto = await Quarto.findByPk(pedido.id_quarto, { transaction: t });
       if (!quarto || Number(quarto.num_quarto) !== Number(req.user.num_quarto)) {
         await t.rollback();
@@ -222,7 +219,7 @@ export const deletarPedido = async (req, res) => {
       }
     }
 
-    await itemPedido.destroy({ where: { id_pedido: idPedido }, transaction: t });
+    await itemPedido.destroy({ where: { id_pedido: id }, transaction: t });
     await pedido.destroy({ transaction: t });
     await t.commit();
 
@@ -241,16 +238,16 @@ export const deletarPedido = async (req, res) => {
 };
 
 export const listarPedidosPorQuarto = async (req, res) => {
-  const { numQuarto } = req.params;
+  const { num } = req.params;
   try {
-    if (req.user?.role === 'hospede' && Number(numQuarto) !== Number(req.user.num_quarto)) {
+    if (req.user?.role === 'hospede' && Number(num) !== Number(req.user.num_quarto)) {
       return res.status(403).json(respostaHelper({
         status: 403,
         message: 'Acesso não autorizado: você só pode consultar pedidos do seu próprio quarto.'
       }));
     }
 
-    const quarto = await Quarto.findOne({ where: { num_quarto: numQuarto } });
+    const quarto = await Quarto.findOne({ where: { num_quarto: num } });
     if (!quarto) {
       return res.status(404).json(respostaHelper({
         status: 404,
@@ -372,9 +369,9 @@ export const listarPedidosEventosAtivos = async (req, res) => {
 
 export const relatorioGeralEvento = async (req, res) => {
   try {
-    const { idEvento } = req.params;
+    const { id } = req.params;
 
-    const evento = await Evento.findByPk(idEvento);
+    const evento = await Evento.findByPk(id);
     if (!evento) {
       return res.status(404).json(respostaHelper({
         status: 404,
@@ -383,7 +380,7 @@ export const relatorioGeralEvento = async (req, res) => {
     }
 
     const pedidos = await Pedido.findAll({
-      where: { id_evento: idEvento },
+      where: { id_evento: id },
       include: [
         {
           model: Item,
@@ -589,7 +586,7 @@ export const listarPedidosHoje = async (req, res) => {
 
 export const obterPedidoEventoQuartoData = async (req, res) => {
   try {
-    const { id_evento, num_quarto, data_pedido } = req.params;
+    const { id: id_evento, num: num_quarto, data: data_pedido } = req.params;
 
     if (req.user?.role === 'hospede' && Number(num_quarto) !== Number(req.user.num_quarto)) {
       return res.status(403).json(respostaHelper({

@@ -34,7 +34,7 @@
   - `500 Internal Server Error`: Erro interno do servidor.
 
 ### 2. Obter Pedido por ID
-- **Caminho:** `/api/pedidos/:idPedido`
+- **Caminho:** `/api/pedidos/:id`
 - **Método HTTP:** `GET`
 - **Autenticação:** Necessária (via `autenticador`)
 - **Descrição:** Obtém os detalhes de um pedido específico pelo seu ID.
@@ -68,7 +68,7 @@
   - `500 Internal Server Error`: Erro interno do servidor.
 
 ### 3. Atualizar Pedido
-- **Caminho:** `/api/pedidos/:idPedido`
+- **Caminho:** `/api/pedidos/:id`
 - **Método HTTP:** `PUT`
 - **Autenticação:** Necessária (via `autenticador`)
 - **Validação:** `pedidoValidadorAtualizar`
@@ -99,7 +99,7 @@
   - `500 Internal Server Error`: Erro interno do servidor.
 
 ### 4. Deletar Pedido
-- **Caminho:** `/api/pedidos/:idPedido`
+- **Caminho:** `/api/pedidos/:id`
 - **Método HTTP:** `DELETE`
 - **Autenticação:** Necessária (via `autenticador`)
 - **Descrição:** Deleta um pedido existente pelo seu ID.
@@ -118,7 +118,7 @@
   - `500 Internal Server Error`: Erro interno do servidor.
 
 ### 5. Listar Pedidos por Quarto
-- **Caminho:** `/api/pedidos/quarto/:numQuarto`
+- **Caminho:** `/api/pedidos/quarto/:id`
 - **Método HTTP:** `GET`
 - **Autenticação:** Necessária (via `autenticador`)
 - **Descrição:** Lista todos os pedidos associados a um quarto específico.
@@ -139,11 +139,8 @@
   - `401 Unauthorized`: Token de autenticação ausente ou inválido.
   - `500 Internal Server Error`: Erro interno do servidor.
 
-
-
-
 ### 6. Listar Pedidos de Eventos Ativos
-- **Caminho:** `/api/pedidos/eventos/ativos`
+- **Caminho:** `/api/pedidos/eventos-ativos`
 - **Método HTTP:** `GET`
 - **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
 - **Descrição:** Lista todos os pedidos associados a eventos que estão ativos na data atual (recorrentes ou com data específica para hoje).
@@ -179,7 +176,7 @@
   - `500 Internal Server Error`: Erro interno do servidor.
 
 ### 7. Relatório Geral de Evento
-- **Caminho:** `/api/pedidos/relatorio/:idEvento`
+- **Caminho:** `/api/eventos/:id/relatorio-pedidos`
 - **Método HTTP:** `GET`
 - **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
 - **Descrição:** Gera um relatório detalhado para um evento específico, incluindo resumo de pedidos, itens mais vendidos e pedidos detalhados.
@@ -303,7 +300,7 @@
 
 
 ### 10. Obter Pedido por Evento, Quarto e Data
-- **Caminho:** `/api/pedidos/evento/:id_evento/quarto/:num_quarto/data/:data_pedido`
+- **Caminho:** `api/pedidos/:id/:num/:data`
 - **Método HTTP:** `GET`
 - **Autenticação:** Necessária (via `autenticador`)
 - **Descrição:** Obtém os dados detalhados do pedido feito para um evento específico, por um quarto específico, em uma determinada data. O hóspede só pode consultar pedidos do próprio quarto.

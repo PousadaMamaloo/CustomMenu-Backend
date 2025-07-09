@@ -25,7 +25,7 @@ router.get('/:id/:num/:data', obterPedidoEventoQuartoData);
 router.get('/:id', obterPedido); 
 router.get('/eventos-ativos', autorizaAdministrador, listarPedidosEventosAtivos); 
 router.get('/:id/relatorio-pedidos', autorizaAdministrador, relatorioGeralEvento); 
-router.get('/:num/pedidos', listarPedidosPorQuarto); 
+router.get('/quarto/:num', listarPedidosPorQuarto); 
 router.put('/:id', pedidoValidadorAtualizar, atualizarPedido); 
 router.delete('/:id', deletarPedido); 
 router.post('/', pedidoValidadorCriar, criarPedido); 
