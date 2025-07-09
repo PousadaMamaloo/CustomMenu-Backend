@@ -2,6 +2,11 @@ import jwt from "jsonwebtoken";
 import { respostaHelper } from "../helpers/respostaHelper.js";
 import tokenBlacklist from "./tokenBlacklist.js";
 
+/**
+ * @description Middleware para autenticação de rotas. Extrai o token JWT do cookie ou do header, verifica sua validade, checa a blacklist e, se válido, 
+ * anexa os dados do usuário ao objeto 'req'.
+ */
+
 const autenticador = (req, res, next) => {
   const token =
     (req.cookies && req.cookies.token) ||

@@ -8,8 +8,13 @@ import itemPedido from '../modelos/itemPedido.js';
 import Evento from '../modelos/evento.js';
 import Quarto from '../modelos/quarto.js';
 import EventoData from '../modelos/eventoData.js';
+import Horario from '../modelos/horario.js';
 
 import { respostaHelper } from '../utilitarios/helpers/respostaHelper.js';
+
+/**
+ * @description Cria um novo pedido e seus itens associados de forma transacional.
+ */
 
 export const criarPedido = async (req, res) => {
   const erros = validationResult(req);
@@ -60,6 +65,10 @@ export const criarPedido = async (req, res) => {
     }));
   }
 };
+
+/**
+ * @description Busca um pedido específico por ID, incluindo detalhes dos itens e do evento, com verificação de permissão para hóspedes.
+ */
 
 export const obterPedido = async (req, res) => {
   try {
@@ -122,7 +131,9 @@ export const obterPedido = async (req, res) => {
   }
 };
 
-import Horario from '../modelos/horario.js';
+/**
+ * @description Atualiza um pedido existente, permitindo alterar o horário, observações e substituir a lista de itens de forma transacional.
+ */
 
 export const atualizarPedido = async (req, res) => {
   const erros = validationResult(req);
@@ -195,11 +206,16 @@ export const atualizarPedido = async (req, res) => {
   }
 };
 
+/**
+ * @description Exclui um pedido e seus itens associados, verificando a permissão do usuário (se hóspede), em uma única transação.
+ */
+
 export const deletarPedido = async (req, res) => {
   const { id } = req.params;
   const t = await sequelize.transaction();
   try {
     const pedido = await Pedido.findByPk(id, { transaction: t });
+
     if (!pedido) {
       await t.rollback();
       return res.status(404).json(respostaHelper({
@@ -236,6 +252,10 @@ export const deletarPedido = async (req, res) => {
     }));
   }
 };
+
+/**
+ * @description Lista todos os pedidos de um quarto específico, com verificação de permissão para hóspedes.
+ */
 
 export const listarPedidosPorQuarto = async (req, res) => {
   const { num } = req.params;
@@ -282,6 +302,10 @@ export const listarPedidosPorQuarto = async (req, res) => {
     }));
   }
 };
+
+/**
+ * @description Lista os pedidos associados a eventos que estão ativos no dia corrente (recorrentes ou com data para hoje).
+ */
 
 export const listarPedidosEventosAtivos = async (req, res) => {
   try {
@@ -366,6 +390,10 @@ export const listarPedidosEventosAtivos = async (req, res) => {
     }));
   }
 };
+
+/**
+ * @description Gera um relatório geral e detalhado para um evento específico, com resumo de totais, itens mais pedidos e lista de todos os pedidos.
+ */
 
 export const relatorioGeralEvento = async (req, res) => {
   try {
@@ -465,6 +493,10 @@ export const relatorioGeralEvento = async (req, res) => {
   }
 };
 
+/**
+ * @description Retorna um histórico de todos os pedidos do sistema de forma paginada.
+ */
+
 export const historicoComPaginacao = async (req, res) => {
   try {
     const { page = 1, limit = 50 } = req.query;
@@ -528,6 +560,10 @@ export const historicoComPaginacao = async (req, res) => {
   }
 };
 
+/**
+ * @description Retorna uma lista de todos os pedidos que foram criados na data atual.
+ */
+
 export const listarPedidosHoje = async (req, res) => {
   try {
     const hoje = new Date();
@@ -583,6 +619,10 @@ export const listarPedidosHoje = async (req, res) => {
     }));
   }
 };
+
+/**
+ * @description Busca um pedido específico usando uma chave composta de evento, número do quarto e data do pedido.
+ */
 
 export const obterPedidoEventoQuartoData = async (req, res) => {
   try {
