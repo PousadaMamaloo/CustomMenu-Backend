@@ -109,6 +109,16 @@ export const obterPedido = async (req, res) => {
       foto_item: it.foto_item
     }));
 
+    const [horario] = await sequelize.query(`
+      SELECT 
+        h.horario
+      FROM mamaloo.tab_horario h
+      WHERE h.id_horario = :id_horario;
+    `, {
+      replacements: {
+          id_horario: pedido.id_horario
+      }});
+
     return res.status(200).json(respostaHelper({
       status: 200,
       data: {
@@ -116,6 +126,7 @@ export const obterPedido = async (req, res) => {
         evento: pedido.Evento ? pedido.Evento.nome_evento : null,
         data_pedido: pedido.data_pedido,
         id_horario: pedido.id_horario,
+        horario: horario[0]["horario"],
         obs_pedido: pedido.obs_pedido,
         itens
       },
