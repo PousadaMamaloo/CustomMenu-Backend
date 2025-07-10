@@ -49,6 +49,8 @@ export const loginHospede = async (req, res) => {
     const dataChegada = new Date(hospede.data_chegada);
     const dataSaida = new Date(hospede.data_saida);
 
+    dataSaida.setHours(23, 59, 59, 999);
+
     if (hoje < dataChegada || hoje > dataSaida) {
         return res.status(403).json(respostaHelper({
             status: 403,
