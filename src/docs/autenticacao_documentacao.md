@@ -39,7 +39,7 @@
   - `500 Internal Server Error`: Erro interno do servidor.
 
 ### 3. Validar Token JWT
-- **Caminho:** `/api/auth/validar_token`
+- **Caminho:** `/api/auth/validar-token`
 - **Método HTTP:** `GET`
 - **Autenticação:** Necessária (via `autenticador`)
 - **Descrição:** Verifica se o token JWT fornecido na requisição é válido e não está na blacklist.

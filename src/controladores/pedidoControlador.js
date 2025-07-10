@@ -1,4 +1,4 @@
-import { Op } from 'sequelize';
+import { Op, literal } from 'sequelize';
 import { validationResult } from 'express-validator';
 import sequelize from '../config/database.js';
 
@@ -376,18 +376,16 @@ export const historicoComPaginacao = async (req, res) => {
 
 export const listarPedidosHoje = async (req, res) => {
   try {
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-
-    const amanha = new Date(hoje);
-    amanha.setDate(hoje.getDate() + 1);
+    const agoraEmUTC = Date.now();
+    const tresHorasEmMs = 3 * 60 * 60 * 1000;
+    const agoraNoBrasil = new Date(agoraEmUTC - tresHorasEmMs);
+    const hojeString = agoraNoBrasil.toISOString().split('T')[0];
 
     const pedidos = await Pedido.findAll({
       where: {
-        data_pedido: {
-          [Op.gte]: hoje,
-          [Op.lt]: amanha
-        }
+        [Op.and]: [
+          literal(`CAST(data_pedido AS DATE) = '${hojeString}'`)
+        ]
       },
       include: [
         {
