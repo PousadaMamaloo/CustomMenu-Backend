@@ -22,6 +22,7 @@ const router = express.Router();
 router.use(autenticador);
 
 router.get('/', listarEventos);
+router.get('/disponiveis', listarEventosHospede);
 router.get('/ativos', autorizaAdministrador, listarPedidosEventosAtivos); 
 router.post('/:id/itens', autorizaAdministrador, vincularItensEvento);
 router.delete('/:id/itens/:id_item', autorizaAdministrador, desvincularItemEvento);
@@ -30,7 +31,6 @@ router.put('/:id', autorizaAdministrador, eventoValidador, atualizarEvento);
 router.delete('/:id', autorizaAdministrador, excluirEvento);
 router.get('/hoje', autorizaAdministrador, listarItensEventosHoje); 
 router.get('/:id', autorizaAdministrador, listarEventoPorId);
-router.get("/disponiveis", listarEventosHospede);
 router.get('/:id/relatorio', autorizaAdministrador, relatorioGeralEvento);
 router.get('/:id_evento/itens', listarItensPorEvento);
 
