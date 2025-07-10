@@ -16,7 +16,7 @@
   - `401 Unauthorized`: Token de autenticação ausente ou inválido.
   - `500 Internal Server Error`: Erro interno do servidor.
 
-### 2. Listar Itens por Evento
+### 2. Listar Itens por Evento Visão do Administrador
 - **Caminho:** `/api/eventos/:id/itens`
 - **Método HTTP:** `GET`
 - **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
@@ -153,7 +153,7 @@
 - **Corpo da Requisição (JSON):**
   ```json
   {
-    "itensIds": ["number"]
+    "itens": ["number"]
   }
   ```
 - **Respostas:**
@@ -189,34 +189,6 @@
   - `404 Not Found`: Evento ou item não encontrado.
   - `500 Internal Server Error`: Erro interno do servidor.
 
-### 9. Listar Quartos de um Evento
-
-- **Caminho:** `/api/eventos/:id/quartos`
-- **Método HTTP:** `GET`
-- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
-
-### 10. Adicionar Datas a um Evento
-
-- **Caminho:** `/api/eventos/:id/datas`
-- **Método HTTP:** `POST`
-- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
-- **Descrição:** Associa datas específicas ao evento.
-- **Corpo:**
-
-  ```json
-  {
-    "datas": ["2025-06-20", "2025-06-21"]
-  }
-  ```
-
-### 11. Listar Datas de um Evento
-
-- **Caminho:** `/api/eventos/:id/datas`
-- **Método HTTP:** `GET`
-- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
-
-
-
 ### 8. Listar Eventos para Hóspede
 - **Caminho:** `/api/eventos/hospede`
 - **Método HTTP:** `GET`
@@ -236,7 +208,7 @@
   - `500 Internal Server Error`: Erro interno do servidor.
 
 
-### 8. Obter Evento por ID
+### 9. Obter Evento por ID
 - **Caminho:** `/api/eventos/:id`
 - **Método HTTP:** `GET`
 - **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
@@ -264,7 +236,7 @@
   - `404 Not Found`: Evento não encontrado.
   - `500 Internal Server Error`: Erro interno do servidor.
 
-  ### 9. Relatório de Itens dos Eventos de Hoje
+  ### 10. Relatório de Itens dos Eventos de Hoje
 - **Caminho:** `/api/eventos/hoje`
 - **Método HTTP:** `GET`
 - **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
@@ -320,5 +292,94 @@
     }
     ```
 
+### 11. Listar Detalhes Completos de um Evento
 
+- **Caminho:** `/api/eventos/:id_evento/itens`
+- **Método HTTP:** `GET`
+- **Autenticação:** Necessária (via `autenticador`)
+- **Descrição:** Recupera todas as informações detalhadas de um evento específico, incluindo seus dados básicos (nome, descrição), a lista de itens associados, as datas em que ocorre e os horários disponíveis.
+- **Respostas:**
+  - `200 OK`: Detalhes do evento retornados com sucesso.
+    ```json
+    {
+      "status": 200,
+      "message": "Detalhes do evento listados com sucesso!",
+      "data": {
+        "nome_evento": "Café da Manhã Especial",
+        "desc_evento": "Um café da manhã completo com itens artesanais.",
+        "datas": [
+          "2025-07-25",
+          "2025-07-26"
+        ],
+        "horarios": [
+          { "id_horario": 1, "horario": "08:00" },
+          { "id_horario": 2, "horario": "09:00" }
+        ],
+        "itens": [
+          {
+            "id_item": 10,
+            "nome_item": "Cesta de Pães",
+            "desc_item": "Pães frescos variados.",
+            "valor_item": 15.00,
+            "categ_item": "Padaria",
+            "foto_item": "data:image/jpeg;base64,..."
+          },
+          {
+            "id_item": 12,
+            "nome_item": "Suco de Laranja Natural",
+            "desc_item": "Feito na hora.",
+            "valor_item": 8.00,
+            "categ_item": "Bebidas",
+            "foto_item": "data:image/jpeg;base64,..."
+          }
+        ]
+      }
+    }
+    ```
+  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `404 Not Found`: O `id_evento` fornecido não corresponde a nenhum evento existente.
+    ```json
+    {
+        "status": 404,
+        "data": {},
+        "message": "Evento não encontrado.",
+        "errors": {}
+    }
+    ```
+  - `500 Internal Server Error`: Erro interno ao executar a consulta no banco de dados.
 
+### 12. Listar Pedidos de Eventos Ativos
+- **Caminho:** `/api/eventos/ativos`
+- **Método HTTP:** `GET`
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
+- **Descrição:** Lista todos os pedidos associados a eventos que estão ativos na data atual (recorrentes ou com data específica para hoje).
+- **Respostas:**
+  - `200 OK`: Pedidos de eventos ativos listados com sucesso.
+    ```json
+    [
+      {
+        "id_pedido": "number",
+        "data_pedido": "YYYY-MM-DDTHH:MM:SS.sssZ",
+        "horario_cafe_manha": "string" (formato HH:MM, ou null),
+        "quarto": "string" (número do quarto),
+        "evento": {
+          "id_evento": "number",
+          "nome_evento": "string",
+          "desc_evento": "string"
+        },
+        "itens": [
+          {
+            "id_item": "number",
+            "nome_item": "string",
+            "quantidade": "number",
+            "valor_unitario": "number",
+            "valor_total": "number",
+            "foto_item": "string" (imagem em base64 no formato data URI)
+          }
+        ]
+      }
+    ]
+    ```
+  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `403 Forbidden`: Usuário não autorizado.
+  - `500 Internal Server Error`: Erro interno do servidor.

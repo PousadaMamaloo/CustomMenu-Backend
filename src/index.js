@@ -9,8 +9,6 @@ import hospedeRotas from './rotas/hospedeRotas.js';
 import administradorRotas from './rotas/administradorRotas.js';
 import itemRotas from './rotas/itemRotas.js';
 import eventoRotas from './rotas/eventoRotas.js';
-import eventoItemRotas from './rotas/eventoItemRotas.js';
-import relatorioRotas from './rotas/relatorioRotas.js';
 import pedidoRotas from './rotas/pedidoRotas.js';
 import autenticacaoRotas from './rotas/autenticacaoRotas.js';
 import './modelos/associacoes.js';
@@ -39,10 +37,8 @@ app.use('/api/hospedes', hospedeRotas);
 app.use('/api/administrador', administradorRotas);
 app.use('/api/itens', itemRotas);
 app.use('/api/eventos', eventoRotas);
-app.use('/api/eventoItem', eventoItemRotas);
 app.use('/api/pedidos', pedidoRotas);
-app.use("/admin/relatorios", relatorioRotas);
-app.use("/api/auth", autenticacaoRotas);
+app.use('/api/auth', autenticacaoRotas);
 
 (async () => {
   try {

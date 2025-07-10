@@ -1,7 +1,7 @@
 ## Rotas de Quartos (`/api/quartos`)
 
 ### 1. Criar Quarto
-- **Caminho:** `/api/quartos/criar`
+- **Caminho:** `/api/quartos`
 - **Método HTTP:** `POST`
 - **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
 - **Descrição:** Cria um novo quarto no sistema.
@@ -26,7 +26,7 @@
   - `500 Internal Server Error`: Erro interno do servidor.
 
 ### 2. Listar Quartos
-- **Caminho:** `/api/quartos/listar`
+- **Caminho:** `/api/quartos`
 - **Método HTTP:** `GET`
 - **Autenticação:** Necessária (via `autenticador`)
 - **Descrição:** Lista todos os quartos existentes.
@@ -42,7 +42,7 @@
   - `500 Internal Server Error`: Erro interno do servidor.
 
 ### 3. Buscar Quarto por Número
-- **Caminho:** `/api/quartos/buscar/:num`
+- **Caminho:** `/api/quartos/:num`
 - **Método HTTP:** `GET`
 - **Autenticação:** Necessária (via `autenticador`)
 - **Descrição:** Busca um quarto específico pelo seu número.

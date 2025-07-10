@@ -45,6 +45,17 @@ export const loginHospede = async (req, res) => {
       }));
     }
 
+    const hoje = new Date();
+    const dataChegada = new Date(hospede.data_chegada);
+    const dataSaida = new Date(hospede.data_saida);
+
+    if (hoje < dataChegada || hoje > dataSaida) {
+        return res.status(403).json(respostaHelper({
+            status: 403,
+            message: 'Sua estadia não está ativa. Acesso negado!'
+        }));
+    }
+
     const payload = {
       id_hospede: hospede.id_hospede,
       nome: hospede.nome_hospede,
@@ -56,7 +67,7 @@ export const loginHospede = async (req, res) => {
 
     res.cookie('token', token, {
       httpOnly: true,
-      secure: false,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 1000
     });

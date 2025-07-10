@@ -1,7 +1,7 @@
 ## Rotas de Itens (`/api/itens`)
 
 ### 1. Criar Item
-- **Caminho:** `/api/itens/criar`
+- **Caminho:** `/api/itens`
 - **Método HTTP:** `POST`
 - **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
 - **Validação:** `itemValidador`
@@ -30,7 +30,7 @@
   - `500 Internal Server Error`: Erro interno do servidor.
 
 ### 2. Listar Itens
-- **Caminho:** `/api/itens/listar`
+- **Caminho:** `/api/itens/`
 - **Método HTTP:** `GET`
 - **Autenticação:** Necessária (via `autenticador`)
 - **Descrição:** Lista todos os itens existentes.
@@ -46,7 +46,7 @@
   - `500 Internal Server Error`: Erro interno do servidor.
 
 ### 3. Atualizar Item
-- **Caminho:** `/api/itens/atualizar/:id`
+- **Caminho:** `/api/itens/:id`
 - **Método HTTP:** `PUT`
 - **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
 - **Validação:** `itemValidador`
@@ -77,7 +77,7 @@
   - `500 Internal Server Error`: Erro interno do servidor.
 
 ### 4. Excluir Item
-- **Caminho:** `/api/itens/excluir/:id`
+- **Caminho:** `/api/itens/:id`
 - **Método HTTP:** `DELETE`
 - **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
 - **Descrição:** Exclui um item existente pelo seu ID, removendo previamente todas as associações com eventos e pedidos vinculados.
@@ -117,7 +117,7 @@
 
 ### 6. Listar Item por ID
 
-- **Caminho:** `/api/itens/listar/:id`
+- **Caminho:** `/api/itens/:id`
 - **Método HTTP:** `GET`
 - **Autenticação:** Necessária (via `autenticador`)
 - **Descrição:** Retorna as informações detalhadas de um item específico pelo seu ID.
