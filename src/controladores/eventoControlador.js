@@ -1,4 +1,4 @@
-import { Op } from 'sequelize';
+import { Op, literal } from 'sequelize';
 import { validationResult } from 'express-validator';
 import sequelize from '../config/database.js';
 
@@ -445,81 +445,69 @@ export const listarEventoPorId = async (req, res) => {
 
 export const listarItensEventosHoje = async (req, res) => {
     try {
-        const hoje = new Date();
-        hoje.setHours(0, 0, 0, 0);
-        const dataHoje = hoje.toISOString().split('T')[0];
+        // 1. Gera a string de data 'hoje' de forma segura, à prova de fuso horário
+        const agoraEmUTC = Date.now();
+        const tresHorasEmMs = 3 * 60 * 60 * 1000;
+        const agoraNoBrasil = new Date(agoraEmUTC - tresHorasEmMs);
+        const dataHoje = agoraNoBrasil.toISOString().split('T')[0];
 
-        const eventosHoje = await Evento.findAll({
+        // 2. Busca todos os pedidos feitos hoje para eventos ativos
+        const pedidosHoje = await Pedido.findAll({
             where: {
-                sts_evento: true,
-                [Op.or]: [
-                    { recorrencia: true },
-                    { '$Datas.data_evento$': dataHoje }
+                [Op.and]: [
+                    literal(`CAST(data_pedido AS DATE) = '${dataHoje}'`)
                 ]
             },
-            include: {
-                model: EventoData,
-                as: 'Datas',
-                attributes: [],
-                required: false
-            }
+            include: [
+                {
+                    model: Evento,
+                    where: { sts_evento: true },
+                    required: true 
+                },
+                {
+                    model: Item,
+                    through: { attributes: ["qntd_item"] }
+                }
+            ]
         });
 
-        const idsEventosHoje = eventosHoje.map(ev => ev.id_evento);
-
-        if (idsEventosHoje.length === 0) {
+        if (pedidosHoje.length === 0) {
             return res.status(200).json(respostaHelper({
                 status: 200,
-                message: "Nenhum evento encontrado para hoje.",
+                message: "Nenhum pedido encontrado para hoje.",
                 data: []
             }));
         }
 
-        const pedidosHoje = await Pedido.findAll({
-            where: {
-                id_evento: { [Op.in]: idsEventosHoje },
-                data_pedido: dataHoje
-            },
-            include: [{
-                model: Item,
-                through: { attributes: ["qntd_item"] }
-            }]
+        // 3. NOVA LÓGICA DE AGREGAÇÃO - Unificada por item para a comanda do dia
+        const comandaDoDia = {};
+
+        pedidosHoje.forEach(pedido => {
+            pedido.Items.forEach(item => {
+                const id_item = item.id_item;
+
+                // Se o item ainda não está na nossa comanda, inicializa ele com os campos necessários
+                if (!comandaDoDia[id_item]) {
+                    comandaDoDia[id_item] = {
+                        nome_item: item.nome_item,
+                        foto_item: item.foto_item,
+                        quantidade_total: 0
+                    };
+                }
+
+                // Soma a quantidade do item neste pedido à quantidade total
+                const qntd = item.itemPedido?.qntd_item || 0;
+                comandaDoDia[id_item].quantidade_total += qntd;
+            });
         });
 
-        let relatorio = [];
-        for (const evento of eventosHoje) {
-            const pedidosEvento = pedidosHoje.filter(p => p.id_evento === evento.id_evento);
-            let itensEvento = {};
-
-            pedidosEvento.forEach(pedido => {
-                pedido.Items.forEach(item => {
-                    if (!itensEvento[item.id_item]) {
-                        itensEvento[item.id_item] = {
-                            id_item: item.id_item,
-                            nome_item: item.nome_item,
-                            foto_item: item.foto_item,
-                            preco_unitario: item.valor_item,
-                            quantidade_total: 0,
-                            valor_total: 0
-                        };
-                    }
-                    const qntd = item.itemPedido?.qntd_item || 0;
-                    itensEvento[item.id_item].quantidade_total += qntd;
-                    itensEvento[item.id_item].valor_total += qntd * (item.valor_item || 0);
-                });
-            });
-
-            relatorio.push({
-                id_evento: evento.id_evento,
-                nome_evento: evento.nome_evento,
-                itens: Object.values(itensEvento)
-            });
-        }
+        // Converte o objeto de comanda para o array final que será retornado
+        const relatorioFinal = Object.values(comandaDoDia);
 
         return res.status(200).json(respostaHelper({
             status: 200,
-            message: "Relatório de itens dos eventos de hoje gerado com sucesso.",
-            data: relatorio
+            message: "Comanda do dia gerada com sucesso.",
+            data: relatorioFinal
         }));
 
     } catch (err) {
