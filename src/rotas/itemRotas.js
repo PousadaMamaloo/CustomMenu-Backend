@@ -8,11 +8,11 @@ const router = express.Router();
 
 router.use(autenticador);
 
-router.post('/criar', autorizaAdministrador, itemValidador, criarItem);
-router.put('/atualizar/:id', autorizaAdministrador, itemValidador, atualizarItem);
-router.delete('/excluir/:id', autorizaAdministrador, excluirItem);
-router.get('/listar/:id', buscarItem)
-router.get('/listar', listarItens);
+router.post('/', autorizaAdministrador, itemValidador, criarItem);
+router.put('/:id', autorizaAdministrador, itemValidador, atualizarItem);
+router.delete('/:id', autorizaAdministrador, excluirItem);
+router.get('/', listarItens);
+router.get('/:id', buscarItem)
 router.get('/categorias', listarCategoriasUnicas);
 
 export default router;

@@ -1,4 +1,4 @@
-import Hospede from '../modelos/hospede.js';
+import Hospede from '/app/src/modelos/hospede.js';
 
 /**
  * @description Middleware que verifica se a estadia do hóspede autenticado está ativa, comparando a data atual com as datas de chegada e saída. 

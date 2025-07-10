@@ -12,8 +12,8 @@ import Pedido from '../modelos/pedido.js';
 import ItemPedido from '../modelos/itemPedido.js';
 import EventoItem from '../modelos/eventoItem.js';
 import EventoHorario from '../modelos/eventoHorario.js';
-
 import { respostaHelper } from '../utilitarios/helpers/respostaHelper.js';
+import { QueryTypes } from 'sequelize';
 
 /**
  * @description Lista todos os eventos, agregando seus horários, datas e quartos associados diretamente via query nativa para otimização.
@@ -260,45 +260,6 @@ export const excluirEvento = async (req, res) => {
         await t.rollback();
         console.error(`Erro ao excluir evento ${id}:`, err);
         return res.status(500).json(respostaHelper({ status: 500, message: 'Erro interno ao excluir evento.', errors: [err.message] }));
-    }
-};
-
-/**
- * @description Lista todos os itens que estão vinculados a um evento específico.
- */
-
-export const listarItensPorEvento = async (req, res) => {
-    const { id } = req.params;
-    try {
-        const evento = await Evento.findByPk(id, {
-            include: [{
-                model: Item,
-                as: 'Itens',
-                attributes: ['id_item', 'nome_item', 'valor_item', 'qntd_max_hospede', 'categ_item'],
-                through: { attributes: [] }
-            }]
-        });
-
-        if (!evento) {
-            return res.status(404).json(respostaHelper({ status: 404, message: 'Evento não encontrado.' }));
-        }
-
-        const itensFormatados = evento.Itens ? evento.Itens.map(item => ({
-            id_item: item.id_item,
-            nome_item: item.nome_item,
-            valor_item: item.valor_item,
-            qntd_max_hospede: item.qntd_max_hospede,
-            categoria: item.categ_item
-        })) : [];
-
-        return res.status(200).json(respostaHelper({
-            status: 200,
-            message: 'Itens do evento listados com sucesso.',
-            data: itensFormatados
-        }));
-    } catch (err) {
-        console.error(`Erro ao buscar itens para o evento ${id}:`, err);
-        return res.status(500).json(respostaHelper({ status: 500, message: 'Erro interno ao buscar itens do evento.', errors: [err.message] }));
     }
 };
 
@@ -565,4 +526,276 @@ export const listarItensEventosHoje = async (req, res) => {
         console.error("Erro ao gerar relatório de itens dos eventos de hoje:", err);
         return res.status(500).json(respostaHelper({ status: 500, message: "Erro ao gerar relatório de itens dos eventos de hoje.", errors: [err.message] }));
     }
+};
+
+/**
+ * @description Gera um relatório geral e detalhado para um evento específico, com resumo de totais, itens mais pedidos e lista de todos os pedidos.
+ */
+
+export const relatorioGeralEvento = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const evento = await Evento.findByPk(id);
+    if (!evento) {
+      return res.status(404).json(respostaHelper({
+        status: 404,
+        message: 'Evento não encontrado.'
+      }));
+    }
+
+    const pedidos = await Pedido.findAll({
+      where: { id_evento: id },
+      include: [
+        {
+          model: Item,
+          through: { attributes: ['qntd_item'] }
+        },
+        {
+          model: Quarto,
+          attributes: ['num_quarto'],
+          required: true
+        }
+      ],
+      order: [['data_pedido', 'DESC']]
+    });
+
+    let totalPedidos = pedidos.length;
+    let valorTotal = 0;
+    let itensResumo = {};
+    let quartos = new Set();
+
+    pedidos.forEach(pedido => {
+      quartos.add(pedido.Quarto.num_quarto);
+      
+      pedido.Items.forEach(item => {
+        const quantidade = item.itemPedido.qntd_item;
+        const valorItem = item.valor_item * quantidade;
+        valorTotal += valorItem;
+
+        if (itensResumo[item.nome_item]) {
+          itensResumo[item.nome_item].quantidade += quantidade;
+          itensResumo[item.nome_item].valor_total += valorItem;
+        } else {
+          itensResumo[item.nome_item] = {
+            nome_item: item.nome_item,
+            quantidade: quantidade,
+            valor_unitario: item.valor_item,
+            valor_total: valorItem
+          };
+        }
+      });
+    });
+
+    const relatorio = {
+      evento: {
+        id_evento: evento.id_evento,
+        nome_evento: evento.nome_evento,
+        desc_evento: evento.desc_evento
+      },
+      resumo: {
+        total_pedidos: totalPedidos,
+        total_quartos_participantes: quartos.size,
+        valor_total: valorTotal
+      },
+      itens_mais_pedidos: Object.values(itensResumo).sort((a, b) => b.quantidade - a.quantidade),
+      pedidos_detalhados: pedidos.map(pedido => ({
+        id_pedido: pedido.id_pedido,
+        data_pedido: pedido.data_pedido,
+        quarto: pedido.Quarto.num_quarto,
+        id_horario: pedido.id_horario,
+        itens: pedido.Items.map(item => ({
+          nome_item: item.nome_item,
+          quantidade: item.itemPedido.qntd_item,
+          valor_unitario: item.valor_item,
+          valor_total: item.valor_item * item.itemPedido.qntd_item,
+          foto_item: item.foto_item
+        }))
+      }))
+    };
+
+    return res.status(200).json(respostaHelper({
+      status: 200,
+      message: 'Relatório geral do evento gerado com sucesso.',
+      data: relatorio
+    }));
+
+  } catch (err) {
+    console.error('Erro ao gerar relatório do evento:', err);
+    return res.status(500).json(respostaHelper({
+      status: 500,
+      message: 'Erro ao gerar relatório do evento.',
+      errors: [err.message]
+    }));
+  }
+};
+
+export const listarItensPorEvento = async (req, res) => {
+  try {
+    const { id_evento } = req.params;
+
+    const sqlEvento = `
+      SELECT nome_evento, desc_evento
+      FROM mamaloo.tab_evento
+      WHERE id_evento = :id_evento;
+    `;
+    const eventoInfo = await sequelize.query(sqlEvento, {
+      replacements: { id_evento },
+      type: QueryTypes.SELECT,
+      plain: true
+    });
+
+    if (!eventoInfo) {
+      return res.status(404).json(respostaHelper({
+        status: 404,
+        message: 'Evento não encontrado.'
+      }));
+    }
+
+    const sqlItens = `
+      SELECT i.*
+      FROM mamaloo.tab_item AS i
+      INNER JOIN mamaloo.tab_re_evento_item AS rei ON i.id_item = rei.id_item
+      WHERE rei.id_evento = :id_evento;
+    `;
+    const itens = await sequelize.query(sqlItens, {
+      replacements: { id_evento },
+      type: QueryTypes.SELECT
+    });
+
+    const sqlDatas = `
+      SELECT data_evento
+      FROM mamaloo.tab_re_evento_data
+      WHERE id_evento = :id_evento;
+    `;
+    const datasResult = await sequelize.query(sqlDatas, {
+      replacements: { id_evento },
+      type: QueryTypes.SELECT
+    });
+    const datas = datasResult.map(d => d.data_evento);
+
+
+    const sqlHorarios = `
+      SELECT h.id_horario, h.horario
+      FROM mamaloo.tab_horario AS h
+      INNER JOIN mamaloo.tab_re_evento_horario AS reh ON h.id_horario = reh.id_horario
+      WHERE reh.id_evento = :id_evento;
+    `;
+    const horarios = await sequelize.query(sqlHorarios, {
+      replacements: { id_evento },
+      type: QueryTypes.SELECT
+    });
+
+    const resultadoFinal = {
+      ...eventoInfo,
+      datas,        
+      horarios,     
+      itens         
+    };
+
+    return res.status(200).json(respostaHelper({
+      status: 200,
+      message: 'Detalhes do evento listados com sucesso!',
+      data: resultadoFinal
+    }));
+
+  } catch (err) {
+    console.error("Erro na consulta SQL:", err);
+    return res.status(500).json(respostaHelper({
+      status: 500,
+      message: 'Erro ao listar os detalhes do evento.',
+      errors: [err.message]
+    }));
+  }
+};
+
+/**
+ * @description Lista os pedidos associados a eventos que estão ativos no dia corrente (recorrentes ou com data para hoje).
+ */
+
+export const listarPedidosEventosAtivos = async (req, res) => {
+  try {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    const pedidos = await Pedido.findAll({
+      include: [
+        {
+          model: Evento,
+          where: { sts_evento: true },
+          required: true
+        },
+        {
+          model: Item,
+          through: { attributes: ['qntd_item'] }
+        },
+        {
+          model: Quarto,
+          attributes: ['num_quarto'],
+          required: true
+        }
+      ],
+      order: [['data_pedido', 'DESC']]
+    });
+
+    const pedidosFiltrados = [];
+
+    for (const pedido of pedidos) {
+      const evento = pedido.Evento;
+      let eventoAtivo = false;
+
+      if (evento.recorrencia) {
+        eventoAtivo = true;
+      } else {
+        const hojeString = hoje.toISOString().split('T')[0];
+
+        const dataEvento = await EventoData.findOne({
+          where: {
+            id_evento: evento.id_evento,
+            data_evento: hojeString
+          }
+        });
+
+        if (dataEvento) {
+          eventoAtivo = true;
+        }
+      }
+
+      if (eventoAtivo) {
+        pedidosFiltrados.push({
+          id_pedido: pedido.id_pedido,
+          data_pedido: pedido.data_pedido,
+          id_horario: pedido.id_horario,
+          quarto: pedido.Quarto.num_quarto,
+          evento: {
+            id_evento: evento.id_evento,
+            nome_evento: evento.nome_evento,
+            desc_evento: evento.desc_evento
+          },
+          itens: pedido.Items.map(item => ({
+            id_item: item.id_item,
+            nome_item: item.nome_item,
+            quantidade: item.itemPedido.qntd_item,
+            valor_unitario: item.valor_item,
+            valor_total: item.valor_item * item.itemPedido.qntd_item,
+            foto_item: item.foto_item
+          }))
+        });
+      }
+    }
+
+    return res.status(200).json(respostaHelper({
+      status: 200,
+      message: 'Pedidos de eventos ativos listados com sucesso.',
+      data: pedidosFiltrados
+    }));
+
+  } catch (err) {
+    console.error('Erro ao listar pedidos de eventos ativos:', err);
+    return res.status(500).json(respostaHelper({
+      status: 500,
+      message: 'Erro ao listar pedidos de eventos ativos.',
+      errors: [err.message]
+    }));
+  }
 };
