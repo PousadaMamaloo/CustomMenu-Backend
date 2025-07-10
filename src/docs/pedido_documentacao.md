@@ -139,43 +139,7 @@
   - `401 Unauthorized`: Token de autenticação ausente ou inválido.
   - `500 Internal Server Error`: Erro interno do servidor.
 
-### 6. Listar Pedidos de Eventos Ativos
-- **Caminho:** `/api/pedidos/eventos-ativos`
-- **Método HTTP:** `GET`
-- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
-- **Descrição:** Lista todos os pedidos associados a eventos que estão ativos na data atual (recorrentes ou com data específica para hoje).
-- **Respostas:**
-  - `200 OK`: Pedidos de eventos ativos listados com sucesso.
-    ```json
-    [
-      {
-        "id_pedido": "number",
-        "data_pedido": "YYYY-MM-DDTHH:MM:SS.sssZ",
-        "horario_cafe_manha": "string" (formato HH:MM, ou null),
-        "quarto": "string" (número do quarto),
-        "evento": {
-          "id_evento": "number",
-          "nome_evento": "string",
-          "desc_evento": "string"
-        },
-        "itens": [
-          {
-            "id_item": "number",
-            "nome_item": "string",
-            "quantidade": "number",
-            "valor_unitario": "number",
-            "valor_total": "number",
-            "foto_item": "string" (imagem em base64 no formato data URI)
-          }
-        ]
-      }
-    ]
-    ```
-  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
-  - `403 Forbidden`: Usuário não autorizado.
-  - `500 Internal Server Error`: Erro interno do servidor.
-
-### 7. Relatório Geral de Evento
+### 6. Relatório Geral de Evento
 - **Caminho:** `/api/eventos/:id/relatorio-pedidos`
 - **Método HTTP:** `GET`
 - **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
@@ -231,7 +195,7 @@
   - `404 Not Found`: Evento não encontrado.
   - `500 Internal Server Error`: Erro interno do servidor.
 
-### 8. Histórico de Pedidos com Paginação
+### 7. Histórico de Pedidos com Paginação
 - **Caminho:** `/api/pedidos/historico`
 - **Método HTTP:** `GET`
 - **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
@@ -270,7 +234,7 @@
   - `403 Forbidden`: Usuário não autorizado.
   - `500 Internal Server Error`: Erro interno do servidor.
 
-### 9. Listar Pedidos de Hoje
+### 8. Listar Pedidos de Hoje
 - **Caminho:** `/api/pedidos/hoje`
 - **Método HTTP:** `GET`
 - **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
@@ -299,7 +263,7 @@
   - `500 Internal Server Error`: Erro interno do servidor.
 
 
-### 10. Obter Pedido por Evento, Quarto e Data
+### 9. Obter Pedido por Evento, Quarto e Data
 - **Caminho:** `api/pedidos/:id/:num/:data`
 - **Método HTTP:** `GET`
 - **Autenticação:** Necessária (via `autenticador`)

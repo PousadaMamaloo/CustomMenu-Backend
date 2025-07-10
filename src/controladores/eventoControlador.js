@@ -263,44 +263,6 @@ export const excluirEvento = async (req, res) => {
     }
 };
 
-export const listarItensPorEventoAdmin = async (req, res) => {
-/**
- * @description Lista todos os itens que estão vinculados a um evento específico.
- */
-    const { id } = req.params;
-    try {
-        const evento = await Evento.findByPk(id, {
-            include: [{
-                model: Item,
-                as: 'Itens',
-                attributes: ['id_item', 'nome_item', 'valor_item', 'qntd_max_hospede', 'categ_item'],
-                through: { attributes: [] }
-            }]
-        });
-
-        if (!evento) {
-            return res.status(404).json(respostaHelper({ status: 404, message: 'Evento não encontrado.' }));
-        }
-
-        const itensFormatados = evento.Itens ? evento.Itens.map(item => ({
-            id_item: item.id_item,
-            nome_item: item.nome_item,
-            valor_item: item.valor_item,
-            qntd_max_hospede: item.qntd_max_hospede,
-            categoria: item.categ_item
-        })) : [];
-
-        return res.status(200).json(respostaHelper({
-            status: 200,
-            message: 'Itens do evento listados com sucesso.',
-            data: itensFormatados
-        }));
-    } catch (err) {
-        console.error(`Erro ao buscar itens para o evento ${id}:`, err);
-        return res.status(500).json(respostaHelper({ status: 500, message: 'Erro interno ao buscar itens do evento.', errors: [err.message] }));
-    }
-};
-
 /**
  * @description Vincula um ou mais itens a um evento, criando as associações na tabela pivo.
  */
@@ -566,98 +528,103 @@ export const listarItensEventosHoje = async (req, res) => {
     }
 };
 
-export const gerarRelatorioPorEvento = async (req, res) => {
+/**
+ * @description Gera um relatório geral e detalhado para um evento específico, com resumo de totais, itens mais pedidos e lista de todos os pedidos.
+ */
+
+export const relatorioGeralEvento = async (req, res) => {
+  try {
     const { id } = req.params;
 
-    try {
-        const evento = await Evento.findByPk(id);
-        if (!evento) {
-            return res.status(404).json(respostaHelper({
-                status: 404,
-                message: 'Evento não encontrado.'
-            }));
-        }
-
-        const query = `
-            SELECT 
-                i.nome_item AS item,
-                i.categ_item AS categoria,
-                SUM(ip.qntd_item) AS quantidade,
-                SUM(ip.qntd_item * i.valor_item) AS valor_total
-            FROM 
-                mamaloo.tab_pedido p
-                JOIN mamaloo.tab_re_item_pedido ip ON p.id_pedido = ip.id_pedido
-                JOIN mamaloo.tab_item i ON ip.id_item = i.id_item
-            WHERE 
-                p.id_evento = :id
-            GROUP BY 
-                i.nome_item, i.categ_item
-            ORDER BY 
-                i.categ_item, i.nome_item
-        `;
-
-        const resultado = await sequelize.query(query, {
-            replacements: { id },
-            type: QueryTypes.SELECT
-        });
-
-        
-        const relatorio = {
-            evento: evento.nome_evento,
-            dados: resultado.map(item => ({
-                item: item.item,
-                quantidade: parseInt(item.quantidade),
-                categoria: item.categoria,
-                valor_total: parseFloat(item.valor_total)
-            }))
-        };
-
-        return res.status(200).json(respostaHelper({
-            status: 200,
-            message: 'Relatório gerado com sucesso.',
-            data: relatorio
-        }));
-    } catch (err) {
-        console.error(`Erro ao gerar relatório para o evento ${id}:`, err);
-        return res.status(500).json(respostaHelper({
-            status: 500,
-            message: 'Erro ao gerar relatório.',
-            errors: [err.message]
-        }));
+    const evento = await Evento.findByPk(id);
+    if (!evento) {
+      return res.status(404).json(respostaHelper({
+        status: 404,
+        message: 'Evento não encontrado.'
+      }));
     }
-};
 
-export const associarItemEvento = async (req, res) => {
-  const { id_evento, id_item, disp_item } = req.body;
+    const pedidos = await Pedido.findAll({
+      where: { id_evento: id },
+      include: [
+        {
+          model: Item,
+          through: { attributes: ['qntd_item'] }
+        },
+        {
+          model: Quarto,
+          attributes: ['num_quarto'],
+          required: true
+        }
+      ],
+      order: [['data_pedido', 'DESC']]
+    });
 
-  try {
-    await EventoItem.create({ id_evento, id_item, disp_item });
+    let totalPedidos = pedidos.length;
+    let valorTotal = 0;
+    let itensResumo = {};
+    let quartos = new Set();
 
-    return res.status(201).json(respostaHelper({
-      status: 201,
-      message: 'Item associado ao evento com sucesso!'
-    }));
-  } catch (err) {
-    return res.status(500).json(respostaHelper({
-      status: 500,
-      message: 'Erro ao associar item ao evento.',
-      errors: [err.message]
-    }));
-  }
-};
+    pedidos.forEach(pedido => {
+      quartos.add(pedido.Quarto.num_quarto);
+      
+      pedido.Items.forEach(item => {
+        const quantidade = item.itemPedido.qntd_item;
+        const valorItem = item.valor_item * quantidade;
+        valorTotal += valorItem;
 
-export const listarAssociacoes = async (req, res) => {
-  try {
-    const associacoes = await EventoItem.findAll();
+        if (itensResumo[item.nome_item]) {
+          itensResumo[item.nome_item].quantidade += quantidade;
+          itensResumo[item.nome_item].valor_total += valorItem;
+        } else {
+          itensResumo[item.nome_item] = {
+            nome_item: item.nome_item,
+            quantidade: quantidade,
+            valor_unitario: item.valor_item,
+            valor_total: valorItem
+          };
+        }
+      });
+    });
+
+    const relatorio = {
+      evento: {
+        id_evento: evento.id_evento,
+        nome_evento: evento.nome_evento,
+        desc_evento: evento.desc_evento
+      },
+      resumo: {
+        total_pedidos: totalPedidos,
+        total_quartos_participantes: quartos.size,
+        valor_total: valorTotal
+      },
+      itens_mais_pedidos: Object.values(itensResumo).sort((a, b) => b.quantidade - a.quantidade),
+      pedidos_detalhados: pedidos.map(pedido => ({
+        id_pedido: pedido.id_pedido,
+        data_pedido: pedido.data_pedido,
+        quarto: pedido.Quarto.num_quarto,
+        id_horario: pedido.id_horario,
+        itens: pedido.Items.map(item => ({
+          nome_item: item.nome_item,
+          quantidade: item.itemPedido.qntd_item,
+          valor_unitario: item.valor_item,
+          valor_total: item.valor_item * item.itemPedido.qntd_item,
+          foto_item: item.foto_item
+        }))
+      }))
+    };
+
     return res.status(200).json(respostaHelper({
       status: 200,
-      data: associacoes,
-      message: 'Associações listadas com sucesso!'
+      message: 'Relatório geral do evento gerado com sucesso.',
+      data: relatorio
     }));
+
   } catch (err) {
+    console.error('Erro ao gerar relatório do evento:', err);
     return res.status(500).json(respostaHelper({
       status: 500,
-      message: 'Erro ao listar associações.',
+      message: 'Erro ao gerar relatório do evento.',
       errors: [err.message]
     }));
   }
@@ -737,6 +704,97 @@ export const listarItensPorEvento = async (req, res) => {
     return res.status(500).json(respostaHelper({
       status: 500,
       message: 'Erro ao listar os detalhes do evento.',
+      errors: [err.message]
+    }));
+  }
+};
+
+/**
+ * @description Lista os pedidos associados a eventos que estão ativos no dia corrente (recorrentes ou com data para hoje).
+ */
+
+export const listarPedidosEventosAtivos = async (req, res) => {
+  try {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    const pedidos = await Pedido.findAll({
+      include: [
+        {
+          model: Evento,
+          where: { sts_evento: true },
+          required: true
+        },
+        {
+          model: Item,
+          through: { attributes: ['qntd_item'] }
+        },
+        {
+          model: Quarto,
+          attributes: ['num_quarto'],
+          required: true
+        }
+      ],
+      order: [['data_pedido', 'DESC']]
+    });
+
+    const pedidosFiltrados = [];
+
+    for (const pedido of pedidos) {
+      const evento = pedido.Evento;
+      let eventoAtivo = false;
+
+      if (evento.recorrencia) {
+        eventoAtivo = true;
+      } else {
+        const hojeString = hoje.toISOString().split('T')[0];
+
+        const dataEvento = await EventoData.findOne({
+          where: {
+            id_evento: evento.id_evento,
+            data_evento: hojeString
+          }
+        });
+
+        if (dataEvento) {
+          eventoAtivo = true;
+        }
+      }
+
+      if (eventoAtivo) {
+        pedidosFiltrados.push({
+          id_pedido: pedido.id_pedido,
+          data_pedido: pedido.data_pedido,
+          id_horario: pedido.id_horario,
+          quarto: pedido.Quarto.num_quarto,
+          evento: {
+            id_evento: evento.id_evento,
+            nome_evento: evento.nome_evento,
+            desc_evento: evento.desc_evento
+          },
+          itens: pedido.Items.map(item => ({
+            id_item: item.id_item,
+            nome_item: item.nome_item,
+            quantidade: item.itemPedido.qntd_item,
+            valor_unitario: item.valor_item,
+            valor_total: item.valor_item * item.itemPedido.qntd_item,
+            foto_item: item.foto_item
+          }))
+        });
+      }
+    }
+
+    return res.status(200).json(respostaHelper({
+      status: 200,
+      message: 'Pedidos de eventos ativos listados com sucesso.',
+      data: pedidosFiltrados
+    }));
+
+  } catch (err) {
+    console.error('Erro ao listar pedidos de eventos ativos:', err);
+    return res.status(500).json(respostaHelper({
+      status: 500,
+      message: 'Erro ao listar pedidos de eventos ativos.',
       errors: [err.message]
     }));
   }

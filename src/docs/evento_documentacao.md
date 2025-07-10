@@ -291,50 +291,10 @@
       ]
     }
     ```
-### 11. Associar Item a Evento
-- **Caminho:** `/api/eventos/eventoItem/`
-- **Método HTTP:** `POST`
-- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
-- **Validação:** `eventoItemValidador`, `validarRequisicao`
-- **Descrição:** Associa um item a um evento.
-- **Corpo da Requisição (JSON):**
-  ```json
-  {
-    "eventoId": "number",
-    "itemId": "number"
-  }
-  ```
-- **Respostas:**
-  - `201 Created`: Item associado ao evento com sucesso.
-    ```json
-    {
-      "mensagem": "Item associado ao evento com sucesso!",
-      "associacao": { ... }
-    }
-    ```
-  - `400 Bad Request`: Dados inválidos fornecidos.
-  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
-  - `500 Internal Server Error`: Erro interno do servidor.
 
-### 12. Listar Associações de Itens de Evento
-- **Caminho:** `/api/eventos/eventoItem/`
-- **Método HTTP:** `GET`
-- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
-- **Descrição:** Lista todas as associações entre itens e eventos.
-- **Respostas:**
-  - `200 OK`: Lista de associações retornada com sucesso.
-    ```json
-    [
-      { "id": 1, "eventoId": 1, "itemId": 1, "createdAt": "...", "updatedAt": "..." },
-      { "id": 2, "eventoId": 1, "itemId": 2, "createdAt": "...", "updatedAt": "..." }
-    ]
-    ```
-  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
-  - `500 Internal Server Error`: Erro interno do servidor.
+### 11. Listar Detalhes Completos de um Evento
 
-### 13. Listar Detalhes Completos de um Evento
-
-- **Caminho:** `/api/eventos/eventoItem/:id_evento`
+- **Caminho:** `/api/eventos/:id_evento/itens`
 - **Método HTTP:** `GET`
 - **Autenticação:** Necessária (via `autenticador`)
 - **Descrição:** Recupera todas as informações detalhadas de um evento específico, incluindo seus dados básicos (nome, descrição), a lista de itens associados, as datas em que ocorre e os horários disponíveis.
@@ -387,3 +347,39 @@
     }
     ```
   - `500 Internal Server Error`: Erro interno ao executar a consulta no banco de dados.
+
+### 12. Listar Pedidos de Eventos Ativos
+- **Caminho:** `/api/eventos/ativos`
+- **Método HTTP:** `GET`
+- **Autenticação:** Necessária (via `autenticador` e `autorizaAdministrador`)
+- **Descrição:** Lista todos os pedidos associados a eventos que estão ativos na data atual (recorrentes ou com data específica para hoje).
+- **Respostas:**
+  - `200 OK`: Pedidos de eventos ativos listados com sucesso.
+    ```json
+    [
+      {
+        "id_pedido": "number",
+        "data_pedido": "YYYY-MM-DDTHH:MM:SS.sssZ",
+        "horario_cafe_manha": "string" (formato HH:MM, ou null),
+        "quarto": "string" (número do quarto),
+        "evento": {
+          "id_evento": "number",
+          "nome_evento": "string",
+          "desc_evento": "string"
+        },
+        "itens": [
+          {
+            "id_item": "number",
+            "nome_item": "string",
+            "quantidade": "number",
+            "valor_unitario": "number",
+            "valor_total": "number",
+            "foto_item": "string" (imagem em base64 no formato data URI)
+          }
+        ]
+      }
+    ]
+    ```
+  - `401 Unauthorized`: Token de autenticação ausente ou inválido.
+  - `403 Forbidden`: Usuário não autorizado.
+  - `500 Internal Server Error`: Erro interno do servidor.

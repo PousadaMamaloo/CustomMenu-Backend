@@ -27,7 +27,7 @@ export const criarPedido = async (req, res) => {
   }
 
   const { id_quarto, id_evento, id_horario, itens, obs_pedido } = req.body;
-  
+
   const t = await sequelize.transaction();
 
   try {
@@ -45,9 +45,9 @@ export const criarPedido = async (req, res) => {
       id_item: it.id_item,
       qntd_item: it.qntd_item
     }));
-    
+
     await itemPedido.bulkCreate(itensParaCriar, { transaction: t });
-    
+
     await t.commit();
 
     return res.status(201).json(respostaHelper({
@@ -304,196 +304,6 @@ export const listarPedidosPorQuarto = async (req, res) => {
 };
 
 /**
- * @description Lista os pedidos associados a eventos que estão ativos no dia corrente (recorrentes ou com data para hoje).
- */
-
-export const listarPedidosEventosAtivos = async (req, res) => {
-  try {
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-
-    const pedidos = await Pedido.findAll({
-      include: [
-        {
-          model: Evento,
-          where: { sts_evento: true },
-          required: true
-        },
-        {
-          model: Item,
-          through: { attributes: ['qntd_item'] }
-        },
-        {
-          model: Quarto,
-          attributes: ['num_quarto'],
-          required: true 
-        }
-      ],
-      order: [['data_pedido', 'DESC']]
-    });
-
-    const pedidosFiltrados = [];
-    
-    for (const pedido of pedidos) {
-      const evento = pedido.Evento;
-      let eventoAtivo = false;
-
-      if (evento.recorrencia) {
-        eventoAtivo = true;
-      } else {
-        const dataEvento = await EventoData.findOne({
-          where: {
-            id_evento: evento.id_evento,
-            data_evento: hoje
-          }
-        });
-        if (dataEvento) {
-          eventoAtivo = true;
-        }
-      }
-
-      if (eventoAtivo) {
-        pedidosFiltrados.push({
-          id_pedido: pedido.id_pedido,
-          data_pedido: pedido.data_pedido,
-          id_horario: pedido.id_horario,
-          quarto: pedido.Quarto.num_quarto,
-          evento: {
-            id_evento: evento.id_evento,
-            nome_evento: evento.nome_evento,
-            desc_evento: evento.desc_evento
-          },
-          itens: pedido.Items.map(item => ({
-            id_item: item.id_item,
-            nome_item: item.nome_item,
-            quantidade: item.itemPedido.qntd_item,
-            valor_unitario: item.valor_item,
-            valor_total: item.valor_item * item.itemPedido.qntd_item,
-            foto_item: item.foto_item
-          }))
-        });
-      }
-    }
-
-    return res.status(200).json(respostaHelper({
-      status: 200,
-      message: 'Pedidos de eventos ativos listados com sucesso.',
-      data: pedidosFiltrados
-    }));
-
-  } catch (err) {
-    console.error('Erro ao listar pedidos de eventos ativos:', err);
-    return res.status(500).json(respostaHelper({
-      status: 500,
-      message: 'Erro ao listar pedidos de eventos ativos.',
-      errors: [err.message]
-    }));
-  }
-};
-
-/**
- * @description Gera um relatório geral e detalhado para um evento específico, com resumo de totais, itens mais pedidos e lista de todos os pedidos.
- */
-
-export const relatorioGeralEvento = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const evento = await Evento.findByPk(id);
-    if (!evento) {
-      return res.status(404).json(respostaHelper({
-        status: 404,
-        message: 'Evento não encontrado.'
-      }));
-    }
-
-    const pedidos = await Pedido.findAll({
-      where: { id_evento: id },
-      include: [
-        {
-          model: Item,
-          through: { attributes: ['qntd_item'] }
-        },
-        {
-          model: Quarto,
-          attributes: ['num_quarto'],
-          required: true
-        }
-      ],
-      order: [['data_pedido', 'DESC']]
-    });
-
-    let totalPedidos = pedidos.length;
-    let valorTotal = 0;
-    let itensResumo = {};
-    let quartos = new Set();
-
-    pedidos.forEach(pedido => {
-      quartos.add(pedido.Quarto.num_quarto);
-      
-      pedido.Items.forEach(item => {
-        const quantidade = item.itemPedido.qntd_item;
-        const valorItem = item.valor_item * quantidade;
-        valorTotal += valorItem;
-
-        if (itensResumo[item.nome_item]) {
-          itensResumo[item.nome_item].quantidade += quantidade;
-          itensResumo[item.nome_item].valor_total += valorItem;
-        } else {
-          itensResumo[item.nome_item] = {
-            nome_item: item.nome_item,
-            quantidade: quantidade,
-            valor_unitario: item.valor_item,
-            valor_total: valorItem
-          };
-        }
-      });
-    });
-
-    const relatorio = {
-      evento: {
-        id_evento: evento.id_evento,
-        nome_evento: evento.nome_evento,
-        desc_evento: evento.desc_evento
-      },
-      resumo: {
-        total_pedidos: totalPedidos,
-        total_quartos_participantes: quartos.size,
-        valor_total: valorTotal
-      },
-      itens_mais_pedidos: Object.values(itensResumo).sort((a, b) => b.quantidade - a.quantidade),
-      pedidos_detalhados: pedidos.map(pedido => ({
-        id_pedido: pedido.id_pedido,
-        data_pedido: pedido.data_pedido,
-        quarto: pedido.Quarto.num_quarto,
-        id_horario: pedido.id_horario,
-        itens: pedido.Items.map(item => ({
-          nome_item: item.nome_item,
-          quantidade: item.itemPedido.qntd_item,
-          valor_unitario: item.valor_item,
-          valor_total: item.valor_item * item.itemPedido.qntd_item,
-          foto_item: item.foto_item
-        }))
-      }))
-    };
-
-    return res.status(200).json(respostaHelper({
-      status: 200,
-      message: 'Relatório geral do evento gerado com sucesso.',
-      data: relatorio
-    }));
-
-  } catch (err) {
-    console.error('Erro ao gerar relatório do evento:', err);
-    return res.status(500).json(respostaHelper({
-      status: 500,
-      message: 'Erro ao gerar relatório do evento.',
-      errors: [err.message]
-    }));
-  }
-};
-
-/**
  * @description Retorna um histórico de todos os pedidos do sistema de forma paginada.
  */
 
@@ -515,7 +325,7 @@ export const historicoComPaginacao = async (req, res) => {
         {
           model: Quarto,
           attributes: ['num_quarto'],
-          required: true 
+          required: true
         }
       ],
       order: [['data_pedido', 'DESC']],
@@ -587,7 +397,7 @@ export const listarPedidosHoje = async (req, res) => {
         {
           model: Quarto,
           attributes: ["num_quarto"],
-          required: true 
+          required: true
         }
       ],
       order: [["data_pedido", "DESC"]]
